@@ -6,14 +6,17 @@ namespace Contenir\Mvc\Workflow\Workflow;
 
 use Laminas\Router\Http\Literal;
 
-class PageActionWorkflow extends AbstractWorkflow
+class PageActionWorkflow extends PageWorkflow
 {
     public function getRouteConfig(): array
     {
         $config = [
             'type' => 'segment',
             'options' => [
-                'route' => $this->getRoutePath() . '[/:action]',
+                'route' => sprintf(
+                    '%s[/:action]',
+                    $this->getRoutePath()
+                ),
                 'defaults' => [
                     'controller' => $this->getRouteController(),
                     'action' => 'index',
