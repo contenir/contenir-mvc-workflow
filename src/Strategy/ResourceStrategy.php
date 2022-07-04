@@ -3,55 +3,142 @@
 namespace Contenir\Mvc\Workflow\Strategy;
 
 use Contenir\Mvc\Workflow\PluginManager;
+use Contenir\Mvc\Workflow\Adapter\ResourceAdapterInterface;
+use InvalidArgumentException;
+use Traversable;
 
 class ResourceStrategy
 {
-    private $repository;
-    private $pluginManager;
+    private PluginManager $pluginManager;
+    private ResourceAdapterInterface $repository;
     private $cacheContainer;
-    private $cacheContainerKey = 'ResourceStrategyCache';
 
-    protected $config = [
-        'navigation' => [],
-        'route' => [],
+    protected $options = [
+        'use_parent_as_landing_page' => false,
+        'cache_key' => 'ResourceStrategyCache'
     ];
+
+    protected $resources = [];
 
     public function __construct(
         PluginManager $pluginManager,
-        $resourceRepository,
-        $cacheContainer = null
+        ResourceAdapterInterface $resourceRepository,
+        $options = []
     ) {
-        $this->repository = $resourceRepository;
-        $this->pluginManager = $pluginManager;
+        $this->setPluginManager($pluginManager);
+        $this->setRepository($resourceRepository);
 
-        $resources = $this->repository->find([
-            'resource_type_id' => 'page',
-            'parent_id IS NULL',
-            'active' => 'active'
-        ], [
-            'sequence ASC'
-        ]);
+        $this->setOptions($options);
+    }
 
-        if ($cacheContainer) {
-            $this->config = $cacheContainer->getItem($this->cacheContainerKey, $success);
-            if (! $success) {
-                $this->config['navigation'] = $this->process($resources);
-                $cacheContainer->setItem($this->cacheContainerKey, $this->config);
-            }
-
-        } else {
-            $this->config['navigation'] = $this->process($resources);
+    public function setOptions($options)
+    {
+        if (! is_array($options) && ! $options instanceof Traversable) {
+            throw new InvalidArgumentException(sprintf(
+                'Parameter provided to %s must be an array or Traversable',
+                __METHOD__
+            ));
         }
+
+        foreach ($options as $key => $value) {
+            $method = 'set' . str_replace(' ', '', ucwords(str_replace('_', ' ', $key)));
+            if (method_exists($this, $method)) {
+                $this->{$method}($value);
+            } elseif (array_key_exists($key, $this->options)) {
+                $this->options[$key] = $value;
+            } else {
+                throw new InvalidArgumentException(sprintf(
+                    'Method %s() does not exist',
+                    $method
+                ));
+            }
+        }
+
+        return $this;
+    }
+
+    public function setPluginManager(PluginManager $pluginManager)
+    {
+        $this->pluginManager = $pluginManager;
+    }
+
+    public function getPluginManager()
+    {
+        return $this->pluginManager;
+    }
+
+    public function setRepository($repository)
+    {
+        $this->repository = $repository;
+    }
+
+    public function getRepository()
+    {
+        return $this->repository;
+    }
+
+    public function setCache($cacheContainer)
+    {
+        $this->cache = $cacheContainer;
+    }
+
+    public function getCache()
+    {
+        return $this->cache;
+    }
+
+    public function setNavigationConfig(array $navigation = [])
+    {
+        $this->resources['navigation'] = $navigation;
     }
 
     public function getNavigationConfig(): array
     {
-        return $this->config['navigation'];
+        $this->build();
+
+        return $this->resources['navigation'];
+    }
+
+    public function setRouteConfig(array $route = [])
+    {
+        $this->resources['route'] = $route;
     }
 
     public function getRouteConfig(): array
     {
-        return $this->config['route'];
+        $this->build();
+
+        return $this->resources['route'];
+    }
+
+    protected function build()
+    {
+        if (! empty($this->resources['route'])) {
+            return;
+        }
+
+        if ($this->getCache()) {
+            $this->resources = $this->getCache()->getItem($this->options['cache_key'], $success);
+            if ($success) {
+                return;
+            }
+        }
+
+        $this->resources = [
+            'route' => [],
+            'navigation' => []
+        ];
+
+        $this->resources['navigation'] = $this->process(
+            $this->getRepository()->getWorkflowResources(),
+            []
+        );
+
+        if ($this->getCache()) {
+            $this->getCache()->setItem($this->options['cache_key'], $this->resources);
+        }
+
+        return;
     }
 
     protected function process($resources, $pages = [])
@@ -62,7 +149,7 @@ class ResourceStrategy
             $routeId = $workflow->getRouteId();
 
             if ($config) {
-                $this->config['route'][$routeId] = $config;
+                $this->resources['route'][$routeId] = $config;
             }
 
             $page = $this->getNavigationPage($workflow);
@@ -100,8 +187,10 @@ class ResourceStrategy
             if ($workflow->getLandingPage()) {
                 $hasLandingPage = true;
             }
-        } elseif (count($resource->children)) {
-            $hasLandingPage = true;
+        } else {
+            $numberOfChildren = count($resource->children);
+            $useParentAsLandingPage = $this->options['use_parent_as_landing_page'];
+            $hasLandingPage = ($numberOfChildren > 0 && $useParentAsLandingPage);
         }
 
         if ($hasLandingPage) {
@@ -143,9 +232,6 @@ class ResourceStrategy
                 $landingSubPage = $subPage;
                 $landingSubPage['label'] = $landingPageTitle;
                 $subPage['pages'][] = $landingSubPage;
-            }
-            if (count($routeSubpage['pages'])) {
-                die('x');
             }
             $pages[] = $subPage;
         }

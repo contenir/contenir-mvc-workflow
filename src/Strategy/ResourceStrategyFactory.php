@@ -15,22 +15,26 @@ class ResourceStrategyFactory implements FactoryInterface
         $requestedName,
         array $options = null
     ) {
-        $config = $container->get('config')['workflow_manager']['strategy'];
+        $options = $container->get('config')['workflow_manager']['strategy'];
 
-        $repositoryClass = $config['options']['repository'] ?? null;
+        $repositoryClass = $options['repository'] ?? null;
         if (empty($repositoryClass)) {
             throw new InvalidArgumentException('No repository found in workflow strategy configuration');
         }
+        $repository = $container->get($repositoryClass);
 
-        $cacheObject = $config['options']['cache'] ?? null;
+        $cacheObject = $options['options']['cache'] ?? null;
         if ($cacheObject) {
-            $cacheObject = $container->get($cacheObject);
+            $options['options']['cache'] = $container->get($cacheObject);
         }
 
-        $repository = $container->get($repositoryClass);
         $workflowPluginManager = $container->get('workflow_plugin_manager');
 
-        $strategy = new $requestedName($workflowPluginManager, $repository, $cacheObject);
+        $strategy = new $requestedName(
+            $workflowPluginManager,
+            $repository,
+            $options['options']
+        );
 
         return $strategy;
     }

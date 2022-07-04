@@ -22,8 +22,11 @@ class WorkflowNavigationFactory extends AbstractNavigationFactory
      * @param null|array $options
      * @return Navigation
      */
-    public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
-    {
+    public function __invoke(
+        ContainerInterface $container,
+        $requestedName,
+        array $options = null
+    ) {
         $config = $container->get('config')['workflow_manager'] ?? [];
         if (empty($config)) {
             throw new InvalidArgumentException('No workflow manager configuration found');
@@ -42,6 +45,7 @@ class WorkflowNavigationFactory extends AbstractNavigationFactory
         $this->setName($navigationName);
 
         $navigationConfig = $strategy->getNavigationConfig();
+
         $pages = $this->preparePages($container, $navigationConfig);
 
         return new Navigation($pages);
