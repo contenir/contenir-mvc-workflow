@@ -2,10 +2,7 @@
 
 namespace Contenir\Mvc\Workflow;
 
-use Interop\Container\ContainerInterface;
-use Laminas\ConfigAggregator\ArrayProvider;
-use Laminas\ConfigAggregator\ConfigAggregator;
-use Laminas\ConfigAggregator\LaminasConfigProvider;
+use Psr\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 
 class WorkflowFactory implements FactoryInterface

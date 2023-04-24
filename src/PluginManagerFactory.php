@@ -3,7 +3,6 @@
 namespace Contenir\Mvc\Workflow;
 
 use Interop\Container\ContainerInterface;
-use Laminas\ServiceManager\Config;
 use Laminas\ServiceManager\FactoryInterface;
 use Laminas\ServiceManager\ServiceLocatorInterface;
 

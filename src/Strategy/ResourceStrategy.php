@@ -12,11 +12,11 @@ class ResourceStrategy
 {
     private PluginManager $pluginManager;
     private ResourceAdapterInterface $repository;
-    private $cacheContainer;
+    private $cache;
 
     protected $options = [
         'use_parent_as_landing_page' => false,
-        'cache_key' => 'ResourceStrategyCache'
+        'cache_key'                  => 'ResourceStrategyCache'
     ];
 
     protected $resources = [];
@@ -126,7 +126,7 @@ class ResourceStrategy
         }
 
         $this->resources = [
-            'route' => [],
+            'route'      => [],
             'navigation' => []
         ];
 
@@ -146,14 +146,14 @@ class ResourceStrategy
     {
         foreach ($resources as $resource) {
             $workflow = $this->getResourceWorkFlow($resource);
-            $config = $workflow->getRouteConfig();
-            $routeId = $workflow->getRouteId();
+            $config   = $workflow->getRouteConfig();
+            $routeId  = $workflow->getRouteId();
 
             if ($config) {
                 $this->resources['route'][$routeId] = $config;
             }
 
-            $page = $this->getNavigationPage($workflow);
+            $page     = $this->getNavigationPage($workflow);
             $children = $resource->children;
 
             if (count($children)) {
@@ -168,20 +168,20 @@ class ResourceStrategy
 
     protected function getNavigationPage($workflow)
     {
-        $resource = $workflow->getResource();
+        $resource       = $workflow->getResource();
         $hasLandingPage = false;
-        $routeTitle = $workflow->getRouteTitle();
-        $routePages = $workflow->getRoutePages();
+        $routeTitle     = $workflow->getRouteTitle();
+        $routePages     = $workflow->getRoutePages();
 
         $page = [
-            'label' => $resource->title_short ?? $resource->title,
-            'route' => $workflow->getRouteId(),
-            'lastmod' => ($resource instanceof MetadataInterface) ? $resource->getMetaModified() : null,
+            'label'      => $resource->title_short ?? $resource->title,
+            'route'      => $workflow->getRouteId(),
+            'lastmod'    => ($resource instanceof MetadataInterface) ? $resource->getMetaModified() : null,
             'changefreq' => $workflow->getPageChangeFrequency(),
-            'priority' => $workflow->getPriority(),
-            'visible' => (bool) $resource->visible,
-            'resource' => $workflow->getResourceId(),
-            'pages' => []
+            'priority'   => $workflow->getPriority(),
+            'visible'    => (bool) $resource->visible,
+            'resource'   => $workflow->getResourceId(),
+            'pages'      => []
         ];
 
         if (count($routePages) > 1) {
@@ -189,16 +189,16 @@ class ResourceStrategy
                 $hasLandingPage = true;
             }
         } else {
-            $numberOfChildren = count($resource->children);
+            $numberOfChildren       = count($resource->children);
             $useParentAsLandingPage = $this->options['use_parent_as_landing_page'];
-            $hasLandingPage = ($numberOfChildren > 0 && $useParentAsLandingPage);
+            $hasLandingPage         = ($numberOfChildren > 0 && $useParentAsLandingPage);
         }
 
         if ($hasLandingPage) {
-            $landingPage = $page;
-            $landingPage['label'] = $routeTitle ?? $resource->title;
+            $landingPage                  = $page;
+            $landingPage['label']         = $routeTitle ?? $resource->title;
             $landingPage['useRouteMatch'] = true;
-            $page['pages'][] = $landingPage;
+            $page['pages'][]              = $landingPage;
         } else {
             if (count($routePages)) {
                 $page['useRouteMatch'] = false;
@@ -218,21 +218,21 @@ class ResourceStrategy
         $pages = [];
 
         foreach ($routeSubpages as $routeSubpage) {
-            $landingSubPage = null;
-            $subRouteId = $parentRouteId . '/' . $routeId;
-            $params = $routeSubpage['params'] ?? [];
+            $landingSubPage   = null;
+            $subRouteId       = $parentRouteId . '/' . $routeId;
+            $params           = $routeSubpage['params']       ?? [];
             $landingPageTitle = $routeSubpage['landingTitle'] ?? false;
-            $subPage = [
-                'label' => $routeSubpage['title'] ?? $resource->title_short ?? $resource->title,
-                'visible' =>  $resource->visible,
-                'route' => $subRouteId,
-                'params' => $params,
-                'pages' => []
+            $subPage          = [
+                'label'   => $routeSubpage['title'] ?? $resource->title_short ?? $resource->title,
+                'visible' => $resource->visible,
+                'route'   => $subRouteId,
+                'params'  => $params,
+                'pages'   => []
             ];
             if ($landingPageTitle) {
-                $landingSubPage = $subPage;
+                $landingSubPage          = $subPage;
                 $landingSubPage['label'] = $landingPageTitle;
-                $subPage['pages'][] = $landingSubPage;
+                $subPage['pages'][]      = $landingSubPage;
             }
             $pages[] = $subPage;
         }

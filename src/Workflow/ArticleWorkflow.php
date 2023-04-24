@@ -8,33 +8,43 @@ use Laminas\Router\Http\Literal;
 
 class ArticleWorkflow extends AbstractWorkflow
 {
-    protected $segment = 'post';
+    protected $segment  = 'post';
     protected $subPages = [
         'post' => [
             ['title' => 'Article']
         ]
     ];
     protected $changeFrequency = 'monthly';
-    protected $priority = '0.5';
+    protected $priority        = '0.5';
+
+    public function getRoutePath(): string
+    {
+        if ($this->routePath === null) {
+            $parts = explode('/', (string) $this->getResource()->slug);
+            return sprintf('/%s', join('/', array_filter($parts)));
+        }
+
+        return $this->routePath;
+    }
 
     public function getRouteConfig(): array
     {
         $config = [
-            'type' => Literal::class,
+            'type'    => Literal::class,
             'options' => [
-                'route' => $this->getRoutePath(),
+                'route'    => $this->getRoutePath(),
                 'defaults' => [
-                    'controller' => $this->getRouteController(),
-                    'action' => 'index',
+                    'controller'  => $this->getRouteController(),
+                    'action'      => 'index',
                     'resource_id' => $this->getResource()->resource_id
                 ]
             ],
             'may_terminate' => true,
-            'child_routes' => [
+            'child_routes'  => [
                 $this->segment => [
-                    'type' => 'segment',
+                    'type'    => 'segment',
                     'options' => [
-                        'route' => '[/:slug]',
+                        'route'       => '[/:slug]',
                         'constraints' => [
                             'slug' => '[a-zA-Z0-9_-]+',
                         ],

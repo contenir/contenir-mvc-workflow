@@ -4,7 +4,6 @@ namespace Contenir\Mvc\Workflow\Strategy;
 
 use Contenir\Mvc\Workflow\Exception\InvalidArgumentException;
 use Interop\Container\ContainerInterface;
-use Laminas\ServiceManager\Config;
 use Laminas\ServiceManager\FactoryInterface;
 use Laminas\ServiceManager\ServiceLocatorInterface;
 
