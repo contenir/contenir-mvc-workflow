@@ -2,6 +2,7 @@
 
 namespace Contenir\Mvc\Workflow\Strategy;
 
+use Contenir\Metadata\MetadataInterface;
 use Contenir\Mvc\Workflow\PluginManager;
 use Contenir\Mvc\Workflow\Adapter\ResourceAdapterInterface;
 use InvalidArgumentException;
@@ -175,7 +176,7 @@ class ResourceStrategy
         $page = [
             'label' => $resource->title_short ?? $resource->title,
             'route' => $workflow->getRouteId(),
-            'lastmod' => ($resource instanceof MetaDataInterface) ? $resource->getMetaModified() : null,
+            'lastmod' => ($resource instanceof MetadataInterface) ? $resource->getMetaModified() : null,
             'changefreq' => $workflow->getPageChangeFrequency(),
             'priority' => $workflow->getPriority(),
             'visible' => (bool) $resource->visible,
