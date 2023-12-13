@@ -5,6 +5,7 @@ namespace Contenir\Mvc\Workflow\Strategy;
 use Contenir\Metadata\MetadataInterface;
 use Contenir\Mvc\Workflow\PluginManager;
 use Contenir\Mvc\Workflow\Adapter\ResourceAdapterInterface;
+use DateTimeInterface;
 use InvalidArgumentException;
 use Traversable;
 
@@ -172,11 +173,12 @@ class ResourceStrategy
         $hasLandingPage = false;
         $routeTitle     = $workflow->getRouteTitle();
         $routePages     = $workflow->getRoutePages();
+        $lastmod        = ($resource instanceof MetadataInterface) ? $resource->getMetaModified() : null;
 
         $page = [
             'label'      => $resource->title_short ?? $resource->title,
             'route'      => $workflow->getRouteId(),
-            'lastmod'    => ($resource instanceof MetadataInterface) ? $resource->getMetaModified() : null,
+            'lastmod'    => ($lastmod instanceof DateTimeInterface) ? $lastmod->format('Y-m-d H:i:s') : null,
             'changefreq' => $workflow->getPageChangeFrequency(),
             'priority'   => $workflow->getPriority(),
             'visible'    => (bool) $resource->visible,
