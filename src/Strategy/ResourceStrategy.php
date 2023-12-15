@@ -119,6 +119,7 @@ class ResourceStrategy
             return;
         }
 
+        $success = false;
         if ($this->getCache()) {
             $this->resources = $this->getCache()->getItem($this->options['cache_key'], $success);
             if ($success) {
@@ -215,27 +216,37 @@ class ResourceStrategy
         return $page;
     }
 
-    protected function getNavigationSubPage($resource, $parentRouteId, $routeId, $routeSubpages)
+    protected function getNavigationSubPage($resource, $parentRouteId, $routeId, $routePages)
     {
         $pages = [];
 
-        foreach ($routeSubpages as $routeSubpage) {
+        foreach ($routePages as $routePage) {
             $landingSubPage   = null;
             $subRouteId       = $parentRouteId . '/' . $routeId;
-            $params           = $routeSubpage['params']       ?? [];
-            $landingPageTitle = $routeSubpage['landingTitle'] ?? false;
+            $params           = $routePage['params']       ?? [];
+            $landingPageTitle = $routePage['landingTitle'] ?? false;
             $subPage          = [
-                'label'   => $routeSubpage['title'] ?? $resource->title_short ?? $resource->title,
+                'label'   => $routePage['title'] ?? $resource->title_short ?? $resource->title,
                 'visible' => $resource->visible,
                 'route'   => $subRouteId,
                 'params'  => $params,
                 'pages'   => []
             ];
+
             if ($landingPageTitle) {
                 $landingSubPage          = $subPage;
                 $landingSubPage['label'] = $landingPageTitle;
                 $subPage['pages'][]      = $landingSubPage;
             }
+
+            if (isset($routePage['pages'])) {
+                foreach ($routePage['pages'] as $subPageRouteId => $routeSubpages) {
+                    foreach ($this->getNavigationSubPage($resource, $subRouteId, $subPageRouteId, $routeSubpages) as $routeSubPage) {
+                        $subPage['pages'][] = $routeSubPage;
+                    }
+                }
+            }
+
             $pages[] = $subPage;
         }
 
