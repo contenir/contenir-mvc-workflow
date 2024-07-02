@@ -15,6 +15,7 @@ abstract class AbstractWorkflow implements WorkflowInterface
     protected $workflowId          = null;
     protected $workflowDescription = null;
     protected $controller          = null;
+    protected $resource            = null;
     protected $routeId             = null;
     protected $routePath           = null;
     protected $routeTitle          = null;
