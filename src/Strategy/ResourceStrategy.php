@@ -201,6 +201,14 @@ class ResourceStrategy
             $landingPage                  = $page;
             $landingPage['label']         = $routeTitle ?? $resource->title;
             $landingPage['useRouteMatch'] = true;
+            if (count($routePages)) {
+                $landingPage['useRouteMatch'] = false;
+                foreach ($routePages as $subRouteId => $routeSubPages) {
+                    foreach ($this->getNavigationSubPage($resource, $workflow->getRouteId(), $subRouteId, $routeSubPages) as $subPage) {
+                        $landingPage['pages'][] = $subPage;
+                    }
+                }
+            }
             $page['pages'][]              = $landingPage;
         } else {
             if (count($routePages)) {
