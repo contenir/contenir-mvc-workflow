@@ -14,7 +14,10 @@
         "source": "https://github.com/contenir/contenir-mvc-workflow"
     },
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
     },
     "extra": {
         "laminas": {
@@ -23,12 +26,13 @@
         }
     },
     "require": {
-        "php": "^8.0.0",
+        "php": "^8.1",
         "laminas/laminas-mvc": "^3.0",
+        "laminas/laminas-router": "^3.10",
         "contenir/contenir-metadata": "^1.0"
     },
     "require-dev": {
-        "laminas/laminas-coding-standard": "~1.0.0",
+        "laminas/laminas-coding-standard": "~3.0.0",
         "phpunit/phpunit": "^9.3"
     },
     "autoload": {
