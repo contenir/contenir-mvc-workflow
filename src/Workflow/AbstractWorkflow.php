@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Contenir\Mvc\Workflow\Workflow;
 
-use Contenir\Mvc\Workflow\Adapter\ResourceAdapterInterface;
+use Contenir\Mvc\Workflow\Resource\ResourceInterface;
 
 use function array_filter;
 use function explode;
@@ -15,21 +15,21 @@ use function strtolower;
 
 abstract class AbstractWorkflow implements WorkflowInterface
 {
-    private ?ResourceAdapterInterface $resource = null;
-    protected array $workflowConfig             = [];
-    protected ?string $workflowTitle            = null;
-    protected ?string $workflowId               = null;
-    protected ?string $workflowDescription      = null;
-    protected ?string $controller               = null;
-    protected ?string $routeId                  = null;
-    protected ?string $routePath                = null;
-    protected ?string $routeTitle               = null;
-    protected ?string $segment                  = null;
-    protected string|array|null $resourceId     = null;
-    protected array $pages                      = [];
-    protected bool $landingPage                 = false;
-    protected ?string $changeFrequency          = null;
-    protected string $priority                  = '0.5';
+    private ?ResourceInterface $resource    = null;
+    protected array $workflowConfig         = [];
+    protected ?string $workflowTitle        = null;
+    protected ?string $workflowId           = null;
+    protected ?string $workflowDescription  = null;
+    protected ?string $controller           = null;
+    protected ?string $routeId              = null;
+    protected ?string $routePath            = null;
+    protected ?string $routeTitle           = null;
+    protected ?string $segment              = null;
+    protected string|array|null $resourceId = null;
+    protected array $pages                  = [];
+    protected bool $landingPage             = false;
+    protected ?string $changeFrequency      = null;
+    protected string $priority              = '0.5';
 
     public function __construct(iterable $workflowConfig = [])
     {
@@ -38,7 +38,7 @@ abstract class AbstractWorkflow implements WorkflowInterface
         }
     }
 
-    public function setResource(ResourceAdapterInterface $resource): void
+    public function setResource(ResourceInterface $resource): void
     {
         $this->resource = $resource;
 
@@ -46,7 +46,7 @@ abstract class AbstractWorkflow implements WorkflowInterface
         $this->workflowId = $resource->workflow ?? 'page';
     }
 
-    public function getResource(): ?ResourceAdapterInterface
+    public function getResource(): ?ResourceInterface
     {
         return $this->resource;
     }

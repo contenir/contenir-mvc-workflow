@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Contenir\Mvc\Workflow\Strategy;
 
 use Contenir\Metadata\MetadataInterface;
-use Contenir\Mvc\Workflow\Adapter\ResourceAdapterInterface;
 use Contenir\Mvc\Workflow\PluginManager;
+use Contenir\Mvc\Workflow\Resource\ResourceAdapterInterface;
+use Contenir\Mvc\Workflow\Resource\ResourceInterface;
 use Contenir\Mvc\Workflow\Workflow\WorkflowInterface;
 use DateTimeInterface;
 use InvalidArgumentException;
@@ -297,7 +298,7 @@ class ResourceStrategy implements ResourceStrategyInterface
     /**
      * @throws ContainerExceptionInterface
      */
-    protected function getResourceWorkFlow(ResourceAdapterInterface $resource): WorkflowInterface
+    protected function getResourceWorkFlow(ResourceInterface $resource): WorkflowInterface
     {
         $workflow = $this->pluginManager->build($resource->workflow ?? 'page');
         $workflow->setResource($resource);

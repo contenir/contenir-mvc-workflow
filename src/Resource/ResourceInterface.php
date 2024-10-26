@@ -2,12 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Contenir\Mvc\Workflow\Adapter;
+namespace Contenir\Mvc\Workflow\Resource;
 
-interface ResourceAdapterInterface
+interface ResourceInterface
 {
-    public function getWorkflowResources();
-
     public function getSlug(): string;
 
     public function getPrimaryKeys(): array;
