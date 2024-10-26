@@ -5,28 +5,29 @@ declare(strict_types=1);
 namespace Contenir\Mvc\Workflow\Navigation;
 
 use Contenir\Mvc\Workflow\Exception\InvalidArgumentException;
-use Interop\Container\ContainerInterface;
 use Laminas\Navigation\Navigation;
 use Laminas\Navigation\Service\AbstractNavigationFactory;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\ContainerInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
 class WorkflowNavigationFactory extends AbstractNavigationFactory
 {
-    protected $cache;
-    protected $name = 'cms';
+    protected string $name = 'cms';
 
     /**
-     * Create and return a new Navigation instance (v3).
+     * Create and return a new Navigation instance
      *
-     * @param ContainerInterface $container
-     * @param string $requestedName
-     * @param null|array $options
-     * @return Navigation
+     * @param string             $requestedName
+     * @param null|array         $options
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
      */
     public function __invoke(
         ContainerInterface $container,
         $requestedName,
-        array $options = null
-    ) {
+        ?array $options = null
+    ): Navigation {
         $config = $container->get('config')['workflow_manager'] ?? [];
         if (empty($config)) {
             throw new InvalidArgumentException('No workflow manager configuration found');
@@ -46,17 +47,15 @@ class WorkflowNavigationFactory extends AbstractNavigationFactory
 
         $navigationConfig = $strategy->getNavigationConfig();
 
-        $pages = $this->preparePages($container, $navigationConfig);
-
-        return new Navigation($pages);
+        return new Navigation($this->preparePages($container, $navigationConfig));
     }
 
-    public function setName($name)
+    public function setName(string $name): void
     {
         $this->name = $name;
     }
 
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }

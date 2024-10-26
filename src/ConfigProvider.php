@@ -1,50 +1,46 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Contenir\Mvc\Workflow;
 
 class ConfigProvider
 {
     /**
      * Retrieve default laminas-paginator configuration.
-     *
-     * @return array
      */
-    public function __invoke()
+    public function __invoke(): array
     {
         return [
-            'dependencies' => $this->getDependencyConfig(),
+            'dependencies'     => $this->getDependencyConfig(),
             'workflow_manager' => $this->getWorkflowManagerConfig(),
         ];
     }
 
     /**
      * Retrieve dependency configuration for laminas-paginator.
-     *
-     * @return array
      */
-    public function getDependencyConfig()
+    public function getDependencyConfig(): array
     {
         return [
-            'aliases' => [
+            'aliases'   => [
                 'workflow_plugin_manager' => PluginManager::class,
-                'workflow_strategy' => Strategy\StrategyInterface::class
+                'workflow_strategy'       => Strategy\ResourceStrategyInterface::class,
             ],
             'factories' => [
-                PluginManager::class => PluginManagerFactory::class,
-                Strategy\StrategyInterface::class => Strategy\StrategyFactory::class,
-            ]
+                PluginManager::class                      => PluginManagerFactory::class,
+                Strategy\ResourceStrategyInterface::class => Strategy\ResourceStrategyFactory::class,
+            ],
         ];
     }
 
     /**
      * Provide default route plugin manager configuration.
-     *
-     * @return array
      */
-    public function getWorkflowManagerConfig()
+    public function getWorkflowManagerConfig(): array
     {
         return [
-            'strategy' => []
+            'strategy' => [],
         ];
     }
 }

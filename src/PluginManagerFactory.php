@@ -1,29 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Contenir\Mvc\Workflow;
 
-use Interop\Container\ContainerInterface;
-use Laminas\ServiceManager\FactoryInterface;
-use Laminas\ServiceManager\ServiceLocatorInterface;
+use interop\container\containerinterface;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
-class PluginManagerFactory implements FactoryInterface
+class PluginManagerFactory
 {
-    public function __invoke(ContainerInterface $container, $name, array $options = null)
+    /**
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
+     */
+    public function __invoke(containerinterface $container, string $name, ?array $options = null): PluginManager
     {
         $config = $container->get('config');
 
-        $pluginManager = new PluginManager($container, $config['workflow_manager'] ?: []);
-
-        return $pluginManager;
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @return WriterPluginManager
-     */
-    public function createService(ServiceLocatorInterface $container, $name = null, $requestedName = null)
-    {
-        return $this($container, $requestedName ?: PluginManager::class, $this->creationOptions);
+        return new PluginManager($container, $config['workflow_manager'] ?: []);
     }
 }

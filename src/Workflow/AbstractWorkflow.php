@@ -4,66 +4,62 @@ declare(strict_types=1);
 
 namespace Contenir\Mvc\Workflow\Workflow;
 
-use Contenir\Mvc\Workflow\Exception\InvalidArgumentException;
-use Laminas\Router\Http\Literal;
-use Traversable;
+use Contenir\Mvc\Workflow\Adapter\ResourceAdapterInterface;
+
+use function array_filter;
+use function explode;
+use function implode;
+use function sprintf;
+use function str_replace;
+use function strtolower;
 
 abstract class AbstractWorkflow implements WorkflowInterface
 {
-    protected $workflowConfig      = [];
-    protected $workflowTitle       = 'Untitled';
-    protected $workflowId          = null;
-    protected $workflowDescription = null;
-    protected $controller          = null;
-    protected $resource            = null;
-    protected $routeId             = null;
-    protected $routePath           = null;
-    protected $routeTitle          = null;
-    protected $segment             = null;
-    protected $resourceId          = null;
-    protected $pages               = [];
-    protected $landingPage         = false;
-    protected $changeFrequency     = null;
-    protected $priority            = '0.5';
+    private ?ResourceAdapterInterface $resource = null;
+    protected array $workflowConfig             = [];
+    protected ?string $workflowTitle            = null;
+    protected ?string $workflowId               = null;
+    protected ?string $workflowDescription      = null;
+    protected ?string $controller               = null;
+    protected ?string $routeId                  = null;
+    protected ?string $routePath                = null;
+    protected ?string $routeTitle               = null;
+    protected ?string $segment                  = null;
+    protected string|array|null $resourceId     = null;
+    protected array $pages                      = [];
+    protected bool $landingPage                 = false;
+    protected ?string $changeFrequency          = null;
+    protected string $priority                  = '0.5';
 
-    public function __construct($workflowConfig = null)
+    public function __construct(iterable $workflowConfig = [])
     {
         if ($workflowConfig !== null) {
             $this->setConfig($workflowConfig);
         }
     }
 
-    public function setResource($resource)
+    public function setResource(ResourceAdapterInterface $resource): void
     {
         $this->resource = $resource;
 
-        $this->resourceId = $resource->getResourceId();
+        $this->resourceId = $resource->getPrimaryKeys();
         $this->workflowId = $resource->workflow ?? 'page';
     }
 
-    public function getResource()
+    public function getResource(): ?ResourceAdapterInterface
     {
         return $this->resource;
     }
 
-    public function setConfig($config)
+    public function setConfig(iterable $config): void
     {
-        if (! is_array($config) && ! $config instanceof Traversable) {
-            throw new InvalidArgumentException(sprintf(
-                'Parameter provided to %s must be an array or Traversable',
-                __METHOD__
-            ));
-        }
-
-        $this->workflowConfig      = $config[$this->resourceId]           ?? [];
-        $this->workflowTitle       = $this->workflowConfig['title']       ?? $this->workflowTitle;
+        $this->workflowConfig      = $config[$this->resourceId] ?? [];
+        $this->workflowTitle       = $this->workflowConfig['title'] ?? $this->workflowTitle;
         $this->workflowDescription = $this->workflowConfig['description'] ?? $this->workflowDescription;
     }
 
     /**
      * getRouteId
-     *
-     * @param  mixed $path
      *
      * @return String
      */
@@ -75,20 +71,22 @@ abstract class AbstractWorkflow implements WorkflowInterface
     /**
      * getRouteId
      *
-     * @param  mixed $path
-     *
+     * @param mixed $path
      * @return String
      */
     public function getRouteId(string $path = ''): string
     {
         if ($this->routeId === null) {
-            $parts = [sprintf(
-                '%s-%d',
-                $this->getResource()->resource_type_id ?? null,
-                $this->getResource()->resource_id ?? null
-            ), $path];
+            $parts = [
+                sprintf(
+                    '%s-%d',
+                    $this->getResource()->resource_type_id ?? null,
+                    $this->getResource()->resource_id ?? null
+                ),
+                $path,
+            ];
 
-            return sprintf('%s', join('/', array_filter($parts)));
+            return sprintf('%s', implode('/', array_filter($parts)));
         }
 
         return $this->routeId;
@@ -103,7 +101,8 @@ abstract class AbstractWorkflow implements WorkflowInterface
     {
         if ($this->routePath === null) {
             $parts = explode('/', $this->resourceId);
-            return sprintf('/%s', join('/', array_filter($parts)));
+
+            return sprintf('/%s', implode('/', array_filter($parts)));
         }
 
         return $this->routePath;
@@ -111,10 +110,8 @@ abstract class AbstractWorkflow implements WorkflowInterface
 
     /**
      * getRouteTitle
-     *
-     * @return void
      */
-    public function getRouteTitle()
+    public function getRouteTitle(): ?string
     {
         return $this->routeTitle;
     }
@@ -126,7 +123,7 @@ abstract class AbstractWorkflow implements WorkflowInterface
      */
     public function getRouteController(): string
     {
-        return "{$this->controller}";
+        return $this->controller;
     }
 
     /**
@@ -141,40 +138,16 @@ abstract class AbstractWorkflow implements WorkflowInterface
         $controllerName = str_replace('Controller', '', $controllerName);
         $controllerName = strtolower($controllerName);
 
-        $resource = sprintf('controller:%s', $controllerName);
-
-        return "{$resource}";
+        return sprintf('controller:%s', $controllerName);
     }
 
     /**
      * getRouteConfig
-     *
-     * @return Array
      */
-    public function getRouteConfig(): array
-    {
-        $routeConfig = [
-            'type'    => Literal::class,
-            'options' => [
-                'route'    => $this->getRoutePath(),
-                'defaults' => [
-                    'controller' => $this->getRouteController(),
-                    'action'     => 'index'
-                ]
-            ],
-            'may_terminate' => true,
-            'child_routes'  => [
-
-            ]
-        ];
-
-        return $routeConfig;
-    }
+    abstract public function getRouteConfig(): array;
 
     /**
      * getRoutePages
-     *
-     * @return Array
      */
     public function getRoutePages(): array
     {
@@ -189,36 +162,28 @@ abstract class AbstractWorkflow implements WorkflowInterface
             'changefreq' => $this->getPageChangeFrequency(),
             'priority'   => $this->getPriority(),
             'visible'    => true,
-            'pages'      => []
+            'pages'      => [],
         ];
     }
 
     /**
      * setResource
-     *
-     * @param  mixed $resource
-     *
-     * @return void
      */
-    public function setLandingPage($flag)
+    public function setLandingPage(bool $flag): void
     {
-        $this->landingPage = (bool) $flag;
+        $this->landingPage = $flag;
     }
 
     /**
      * getResource
-     *
-     * @return void
      */
-    public function getLandingPage()
+    public function getLandingPage(): bool
     {
         return $this->landingPage;
     }
 
     /**
      * getPageChangeFrequency
-     *
-     * @return String
      */
     public function getPageChangeFrequency(): ?string
     {
@@ -227,8 +192,6 @@ abstract class AbstractWorkflow implements WorkflowInterface
 
     /**
      * getPageChangeFrequency
-     *
-     * @return String
      */
     public function getPriority(): ?string
     {

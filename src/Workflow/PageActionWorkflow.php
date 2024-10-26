@@ -4,25 +4,25 @@ declare(strict_types=1);
 
 namespace Contenir\Mvc\Workflow\Workflow;
 
+use function sprintf;
+
 class PageActionWorkflow extends PageWorkflow
 {
     public function getRouteConfig(): array
     {
-        $config = [
+        return [
             'type'    => 'segment',
             'options' => [
-                'route' => sprintf(
+                'route'    => sprintf(
                     '%s[/:action]',
                     $this->getRoutePath()
                 ),
                 'defaults' => [
                     'controller'  => $this->getRouteController(),
                     'action'      => 'index',
-                    'resource_id' => $this->getResource()->resource_id
-                ]
-            ]
+                    'resource_id' => $this->getResource()->getPrimaryKeys(),
+                ],
+            ],
         ];
-
-        return $config;
     }
 }

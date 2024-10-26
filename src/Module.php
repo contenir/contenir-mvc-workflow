@@ -1,30 +1,35 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Contenir\Mvc\Workflow;
 
-use Contenir\Mvc\Workflow\PluginManager;
 use Contenir\Mvc\Workflow\Exception\InvalidArgumentException;
 use Laminas\Mvc\MvcEvent;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
 class Module
 {
     /**
      * Retrieve default laminas-paginator config for laminas-mvc context.
-     *
-     * @return array
      */
-    public function getConfig()
+    public function getConfig(): array
     {
         $provider = new ConfigProvider();
 
         return [
-            'service_manager' => $provider->getDependencyConfig(),
+            'service_manager'  => $provider->getDependencyConfig(),
             'workflow_manager' => $provider->getWorkflowManagerConfig(),
-            'workflow' => []
+            'workflow'         => [],
         ];
     }
 
-    public function onBootstrap(MvcEvent $event)
+    /**
+     * @throws NotFoundExceptionInterface
+     * @throws ContainerExceptionInterface
+     */
+    public function onBootstrap(MvcEvent $event): void
     {
         $application    = $event->getApplication();
         $serviceManager = $application->getServiceManager();
@@ -35,8 +40,8 @@ class Module
         }
 
         $strategy = $serviceManager->get($config['type']);
+        $strategy->getNavigationConfig();
 
-        $navigationConfig = $strategy->getNavigationConfig();
         $routeConfig = $strategy->getRouteConfig();
 
         $router = $serviceManager->get('router');

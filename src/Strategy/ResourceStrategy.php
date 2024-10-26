@@ -1,31 +1,43 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Contenir\Mvc\Workflow\Strategy;
 
 use Contenir\Metadata\MetadataInterface;
-use Contenir\Mvc\Workflow\PluginManager;
 use Contenir\Mvc\Workflow\Adapter\ResourceAdapterInterface;
+use Contenir\Mvc\Workflow\PluginManager;
+use Contenir\Mvc\Workflow\Workflow\WorkflowInterface;
 use DateTimeInterface;
 use InvalidArgumentException;
-use Traversable;
+use Laminas\Cache\Exception\ExceptionInterface;
+use Laminas\Cache\Storage\StorageInterface;
+use Psr\Container\ContainerExceptionInterface;
 
-class ResourceStrategy
+use function array_key_exists;
+use function count;
+use function method_exists;
+use function sprintf;
+use function str_replace;
+use function ucwords;
+
+class ResourceStrategy implements ResourceStrategyInterface
 {
     private PluginManager $pluginManager;
     private ResourceAdapterInterface $repository;
-    private $cache;
+    private StorageInterface $cache;
 
-    protected $options = [
+    protected array $options = [
         'use_parent_as_landing_page' => false,
-        'cache_key'                  => 'ResourceStrategyCache'
+        'cache_key'                  => 'ResourceStrategyCache',
     ];
 
-    protected $resources = [];
+    protected array $resources = [];
 
     public function __construct(
         PluginManager $pluginManager,
         ResourceAdapterInterface $resourceRepository,
-        $options = []
+        iterable $options = []
     ) {
         $this->setPluginManager($pluginManager);
         $this->setRepository($resourceRepository);
@@ -33,15 +45,8 @@ class ResourceStrategy
         $this->setOptions($options);
     }
 
-    public function setOptions($options)
+    public function setOptions(iterable $options): self
     {
-        if (! is_array($options) && ! $options instanceof Traversable) {
-            throw new InvalidArgumentException(sprintf(
-                'Parameter provided to %s must be an array or Traversable',
-                __METHOD__
-            ));
-        }
-
         foreach ($options as $key => $value) {
             $method = 'set' . str_replace(' ', '', ucwords(str_replace('_', ' ', $key)));
             if (method_exists($this, $method)) {
@@ -59,41 +64,45 @@ class ResourceStrategy
         return $this;
     }
 
-    public function setPluginManager(PluginManager $pluginManager)
+    public function setPluginManager(PluginManager $pluginManager): void
     {
         $this->pluginManager = $pluginManager;
     }
 
-    public function getPluginManager()
+    public function getPluginManager(): PluginManager
     {
         return $this->pluginManager;
     }
 
-    public function setRepository($repository)
+    public function setRepository(ResourceAdapterInterface $repository): void
     {
         $this->repository = $repository;
     }
 
-    public function getRepository()
+    public function getRepository(): ResourceAdapterInterface
     {
         return $this->repository;
     }
 
-    public function setCache($cacheContainer)
+    public function setCache(StorageInterface $cacheContainer): void
     {
         $this->cache = $cacheContainer;
     }
 
-    public function getCache()
+    public function getCache(): StorageInterface
     {
         return $this->cache;
     }
 
-    public function setNavigationConfig(array $navigation = [])
+    public function setNavigationConfig(array $navigation = []): void
     {
         $this->resources['navigation'] = $navigation;
     }
 
+    /**
+     * @throws ExceptionInterface
+     * @throws ContainerExceptionInterface
+     */
     public function getNavigationConfig(): array
     {
         $this->build();
@@ -101,11 +110,15 @@ class ResourceStrategy
         return $this->resources['navigation'];
     }
 
-    public function setRouteConfig(array $route = [])
+    public function setRouteConfig(array $route = []): void
     {
         $this->resources['route'] = $route;
     }
 
+    /**
+     * @throws ExceptionInterface
+     * @throws ContainerExceptionInterface
+     */
     public function getRouteConfig(): array
     {
         $this->build();
@@ -113,38 +126,33 @@ class ResourceStrategy
         return $this->resources['route'];
     }
 
-    protected function build()
+    /**
+     * @throws ExceptionInterface
+     * @throws ContainerExceptionInterface
+     */
+    protected function build(): void
     {
-        if (! empty($this->resources['route'])) {
-            return;
+        $cacheKey = $this->options['cache_key'];
+        if (! $this->getCache()->hasItem($cacheKey)) {
+            $this->resources = [
+                'route'      => [],
+                'navigation' => [],
+            ];
+
+            $this->resources['navigation'] = $this->process(
+                $this->getRepository()->getWorkflowResources()
+            );
+
+            $this->getCache()->setItem($cacheKey, $this->resources);
+        } else {
+            $this->resources = $this->getCache()->getItem($cacheKey);
         }
-
-        $success = false;
-        if ($this->getCache()) {
-            $this->resources = $this->getCache()->getItem($this->options['cache_key'], $success);
-            if ($success) {
-                return;
-            }
-        }
-
-        $this->resources = [
-            'route'      => [],
-            'navigation' => []
-        ];
-
-        $this->resources['navigation'] = $this->process(
-            $this->getRepository()->getWorkflowResources(),
-            []
-        );
-
-        if ($this->getCache()) {
-            $this->getCache()->setItem($this->options['cache_key'], $this->resources);
-        }
-
-        return;
     }
 
-    protected function process($resources, $pages = [])
+    /**
+     * @throws ContainerExceptionInterface
+     */
+    protected function process(iterable $resources, array $pages = []): array
     {
         foreach ($resources as $resource) {
             $workflow = $this->getResourceWorkFlow($resource);
@@ -168,23 +176,23 @@ class ResourceStrategy
         return $pages;
     }
 
-    protected function getNavigationPage($workflow)
+    public function getNavigationPage(WorkflowInterface $workflow): array
     {
         $resource       = $workflow->getResource();
         $hasLandingPage = false;
         $routeTitle     = $workflow->getRouteTitle();
         $routePages     = $workflow->getRoutePages();
-        $lastmod        = ($resource instanceof MetadataInterface) ? $resource->getMetaModified() : null;
+        $lastmod        = $resource instanceof MetadataInterface ? $resource->getMetaModified() : null;
 
         $page = [
             'label'      => $resource->title_short ?? $resource->title,
             'route'      => $workflow->getRouteId(),
-            'lastmod'    => ($lastmod instanceof DateTimeInterface) ? $lastmod->format('Y-m-d H:i:s') : null,
+            'lastmod'    => $lastmod instanceof DateTimeInterface ? $lastmod->format('Y-m-d H:i:s') : null,
             'changefreq' => $workflow->getPageChangeFrequency(),
             'priority'   => $workflow->getPriority(),
             'visible'    => (bool) $resource->visible,
             'resource'   => $workflow->getResourceId(),
-            'pages'      => []
+            'pages'      => [],
         ];
 
         if (count($routePages) > 1) {
@@ -194,7 +202,7 @@ class ResourceStrategy
         } else {
             $numberOfChildren       = count($resource->children);
             $useParentAsLandingPage = $this->options['use_parent_as_landing_page'];
-            $hasLandingPage         = ($numberOfChildren > 0 && $useParentAsLandingPage);
+            $hasLandingPage         = $numberOfChildren > 0 && $useParentAsLandingPage;
         }
 
         if ($hasLandingPage) {
@@ -204,17 +212,31 @@ class ResourceStrategy
             if (count($routePages)) {
                 $landingPage['useRouteMatch'] = false;
                 foreach ($routePages as $subRouteId => $routeSubPages) {
-                    foreach ($this->getNavigationSubPage($resource, $workflow->getRouteId(), $subRouteId, $routeSubPages) as $subPage) {
+                    foreach (
+                        $this->getNavigationSubPage(
+                            $resource,
+                            $workflow->getRouteId(),
+                            $subRouteId,
+                            $routeSubPages
+                        ) as $subPage
+                    ) {
                         $landingPage['pages'][] = $subPage;
                     }
                 }
             }
-            $page['pages'][]              = $landingPage;
+            $page['pages'][] = $landingPage;
         } else {
             if (count($routePages)) {
                 $page['useRouteMatch'] = false;
                 foreach ($routePages as $subRouteId => $routeSubPages) {
-                    foreach ($this->getNavigationSubPage($resource, $workflow->getRouteId(), $subRouteId, $routeSubPages) as $subPage) {
+                    foreach (
+                        $this->getNavigationSubPage(
+                            $resource,
+                            $workflow->getRouteId(),
+                            $subRouteId,
+                            $routeSubPages
+                        ) as $subPage
+                    ) {
                         $page['pages'][] = $subPage;
                     }
                 }
@@ -224,21 +246,25 @@ class ResourceStrategy
         return $page;
     }
 
-    protected function getNavigationSubPage($resource, $parentRouteId, $routeId, $routePages)
-    {
+    protected function getNavigationSubPage(
+        object $resource,
+        string $parentRouteId,
+        string $routeId,
+        array $routePages
+    ): array {
         $pages = [];
 
         foreach ($routePages as $routePage) {
             $landingSubPage   = null;
             $subRouteId       = $parentRouteId . '/' . $routeId;
-            $params           = $routePage['params']       ?? [];
+            $params           = $routePage['params'] ?? [];
             $landingPageTitle = $routePage['landingTitle'] ?? false;
             $subPage          = [
                 'label'   => $routePage['title'] ?? $resource->title_short ?? $resource->title,
                 'visible' => $resource->visible,
                 'route'   => $subRouteId,
                 'params'  => $params,
-                'pages'   => []
+                'pages'   => [],
             ];
 
             if ($landingPageTitle) {
@@ -249,7 +275,14 @@ class ResourceStrategy
 
             if (isset($routePage['pages'])) {
                 foreach ($routePage['pages'] as $subPageRouteId => $routeSubpages) {
-                    foreach ($this->getNavigationSubPage($resource, $subRouteId, $subPageRouteId, $routeSubpages) as $routeSubPage) {
+                    foreach (
+                        $this->getNavigationSubPage(
+                            $resource,
+                            $subRouteId,
+                            $subPageRouteId,
+                            $routeSubpages
+                        ) as $routeSubPage
+                    ) {
                         $subPage['pages'][] = $routeSubPage;
                     }
                 }
@@ -261,7 +294,10 @@ class ResourceStrategy
         return $pages;
     }
 
-    protected function getResourceWorkFlow($resource)
+    /**
+     * @throws ContainerExceptionInterface
+     */
+    protected function getResourceWorkFlow(ResourceAdapterInterface $resource): WorkflowInterface
     {
         $workflow = $this->pluginManager->build($resource->workflow ?? 'page');
         $workflow->setResource($resource);

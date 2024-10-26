@@ -29,7 +29,10 @@
         "php": "^8.1",
         "laminas/laminas-mvc": "^3.0",
         "laminas/laminas-router": "^3.10",
-        "contenir/contenir-metadata": "^1.0"
+        "contenir/contenir-metadata": "^1.0",
+        "laminas/laminas-navigation": "^2.16",
+        "laminas/laminas-cache": "^3.12",
+        "laminas/laminas-cache-storage-adapter-filesystem": "^2.4"
     },
     "require-dev": {
         "laminas/laminas-coding-standard": "~3.0.0",
@@ -38,11 +41,6 @@
     "autoload": {
         "psr-4": {
             "Contenir\\Mvc\\Workflow\\": "src/"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Contenir\\Mvc\\Workflow\\": "test/"
         }
     },
     "scripts": {

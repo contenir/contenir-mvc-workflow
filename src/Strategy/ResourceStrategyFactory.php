@@ -1,19 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Contenir\Mvc\Workflow\Strategy;
 
 use Contenir\Mvc\Workflow\Exception\InvalidArgumentException;
-use Interop\Container\ContainerInterface;
-use Laminas\ServiceManager\FactoryInterface;
-use Laminas\ServiceManager\ServiceLocatorInterface;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\ContainerInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
-class ResourceStrategyFactory implements FactoryInterface
+class ResourceStrategyFactory
 {
+    /**
+     * @throws NotFoundExceptionInterface
+     * @throws ContainerExceptionInterface
+     */
     public function __invoke(
         ContainerInterface $container,
-        $requestedName,
-        array $options = null
-    ) {
+        string $requestedName,
+        ?array $options = null
+    ): ResourceStrategyInterface {
         $options = $container->get('config')['workflow_manager']['strategy'];
 
         $repositoryClass = $options['repository'] ?? null;
@@ -29,22 +35,10 @@ class ResourceStrategyFactory implements FactoryInterface
 
         $workflowPluginManager = $container->get('workflow_plugin_manager');
 
-        $strategy = new $requestedName(
+        return new $requestedName(
             $workflowPluginManager,
             $repository,
             $options['options']
         );
-
-        return $strategy;
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @return WriterPluginManager
-     */
-    public function createService(ServiceLocatorInterface $container, $name = null, $requestedName = null)
-    {
-        return $this($container, $requestedName ?: PluginManager::class, $this->creationOptions);
     }
 }

@@ -6,22 +6,27 @@ namespace Contenir\Mvc\Workflow\Workflow;
 
 use Laminas\Router\Http\Literal;
 
+use function array_filter;
+use function explode;
+use function implode;
+use function sprintf;
+
 class ArticleWorkflow extends AbstractWorkflow
 {
-    protected $segment  = 'post';
-    protected $subPages = [
+    protected ?string $segment         = 'post';
+    protected array $subPages          = [
         'post' => [
-            ['title' => 'Article']
-        ]
+            ['title' => 'Article'],
+        ],
     ];
-    protected $changeFrequency = 'monthly';
-    protected $priority        = '0.5';
+    protected ?string $changeFrequency = 'monthly';
+    protected string $priority         = '0.5';
 
     public function getRoutePath(): string
     {
         if ($this->routePath === null) {
-            $parts = explode('/', (string) $this->getResource()->slug);
-            return sprintf('/%s', join('/', array_filter($parts)));
+            $parts = explode('/', $this->getResource()->getSlug());
+            return sprintf('/%s', implode('/', array_filter($parts)));
         }
 
         return $this->routePath;
@@ -29,15 +34,15 @@ class ArticleWorkflow extends AbstractWorkflow
 
     public function getRouteConfig(): array
     {
-        $config = [
-            'type'    => Literal::class,
-            'options' => [
+        return [
+            'type'          => Literal::class,
+            'options'       => [
                 'route'    => $this->getRoutePath(),
                 'defaults' => [
                     'controller'  => $this->getRouteController(),
                     'action'      => 'index',
-                    'resource_id' => $this->getResource()->resource_id
-                ]
+                    'resource_id' => $this->getResource()->getPrimaryKeys(),
+                ],
             ],
             'may_terminate' => true,
             'child_routes'  => [
@@ -48,14 +53,12 @@ class ArticleWorkflow extends AbstractWorkflow
                         'constraints' => [
                             'slug' => '[a-zA-Z0-9_-]+',
                         ],
-                        'defaults' => [
+                        'defaults'    => [
                             'action' => 'view',
-                        ]
-                    ]
-                ]
-            ]
+                        ],
+                    ],
+                ],
+            ],
         ];
-
-        return $config;
     }
 }
