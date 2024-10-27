@@ -11,7 +11,7 @@ use function explode;
 use function implode;
 use function sprintf;
 
-class ArticleWorkflow extends AbstractWorkflow
+class ArticleWorkflow extends AbstractArticleWorkflow
 {
     protected ?string $segment         = 'post';
     protected array $subPages          = [
