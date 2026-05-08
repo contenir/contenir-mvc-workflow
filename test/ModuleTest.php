@@ -7,7 +7,7 @@ namespace ContenirTest\Mvc\Workflow;
 use Contenir\Mvc\Workflow\ConfigProvider;
 use Contenir\Mvc\Workflow\Exception\InvalidArgumentException;
 use Contenir\Mvc\Workflow\Module;
-use Contenir\Mvc\Workflow\Strategy\ResourceStrategy;
+use Contenir\Mvc\Workflow\Strategy\ResourceStrategyInterface;
 use Laminas\Mvc\Application;
 use Laminas\Mvc\MvcEvent;
 use Laminas\Router\RouteStackInterface;
@@ -33,13 +33,9 @@ class ModuleTest extends TestCase
 
     public function testOnBootstrapAddsRoutesFromStrategy(): void
     {
-        $strategy = $this->getMockBuilder(ResourceStrategy::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['getNavigationConfig', 'getRouteConfig'])
-            ->getMock();
-        $strategy->expects($this->once())
-            ->method('getNavigationConfig')
-            ->willReturn([]);
+        $strategy = $this->createMock(ResourceStrategyInterface::class);
+        $strategy->expects($this->never())
+            ->method('getNavigationConfig');
         $strategy->expects($this->once())
             ->method('getRouteConfig')
             ->willReturn(['the-route' => ['type' => 'literal']]);

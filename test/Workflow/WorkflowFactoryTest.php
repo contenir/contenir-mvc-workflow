@@ -38,8 +38,8 @@ class WorkflowFactoryTest extends TestCase
         $reflection = new ReflectionClass($workflow);
         $prop       = $reflection->getProperty('workflowConfig');
         $prop->setAccessible(true);
-        // Without a resource set the resourceId is null so the resolved
-        // config is the default empty array.
+        // Resolution is deferred until setResource() supplies a workflowId,
+        // so before a resource is attached, workflowConfig stays empty.
         $this->assertSame([], $prop->getValue($workflow));
     }
 

@@ -6,7 +6,7 @@ namespace ContenirTest\Mvc\Workflow\Navigation;
 
 use Contenir\Mvc\Workflow\Exception\InvalidArgumentException;
 use Contenir\Mvc\Workflow\Navigation\WorkflowNavigationFactory;
-use Contenir\Mvc\Workflow\Strategy\ResourceStrategy;
+use Contenir\Mvc\Workflow\Strategy\ResourceStrategyInterface;
 use Laminas\Http\PhpEnvironment\Request as HttpRequest;
 use Laminas\Mvc\Application;
 use Laminas\Mvc\MvcEvent;
@@ -18,16 +18,13 @@ use PHPUnit\Framework\TestCase;
 
 class WorkflowNavigationFactoryTest extends TestCase
 {
-    /** @return ResourceStrategy&MockObject */
-    private function makeStrategyMock(): ResourceStrategy
+    /** @return ResourceStrategyInterface&MockObject */
+    private function makeStrategyMock(): ResourceStrategyInterface
     {
-        return $this->getMockBuilder(ResourceStrategy::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['getNavigationConfig', 'getRouteConfig'])
-            ->getMock();
+        return $this->createMock(ResourceStrategyInterface::class);
     }
 
-    private function makeContainer(array $config, ?ResourceStrategy $strategy = null): ServiceManager
+    private function makeContainer(array $config, ?ResourceStrategyInterface $strategy = null): ServiceManager
     {
         $container = new ServiceManager();
         $container->setService('config', $config);

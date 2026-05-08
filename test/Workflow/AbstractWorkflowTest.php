@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace ContenirTest\Mvc\Workflow\Workflow;
 
+use ArrayIterator;
 use Contenir\Mvc\Workflow\Workflow\WorkflowInterface;
 use ContenirTest\Mvc\Workflow\TestAsset\AbstractWorkflowStub;
 use ContenirTest\Mvc\Workflow\TestAsset\ResourceStub;
 use PHPUnit\Framework\TestCase;
-use TypeError;
 
 class AbstractWorkflowTest extends TestCase
 {
@@ -17,10 +17,10 @@ class AbstractWorkflowTest extends TestCase
         $this->assertInstanceOf(WorkflowInterface::class, new AbstractWorkflowStub());
     }
 
-    public function testConstructorAppliesConfigForResource(): void
+    public function testConstructorDefersResolutionUntilResourceIsKnown(): void
     {
-        // No resource is set, so resourceId is null at construction.
-        // Config keyed by null falls back to []; nothing should be set.
+        // The workflowId is unknown until setResource() runs, so the
+        // constructor stores the raw config but applies nothing yet.
         $workflow = new AbstractWorkflowStub(['key' => ['title' => 'something']]);
 
         $this->assertSame([], $workflow->getProtectedProperty('workflowConfig'));
@@ -28,18 +28,20 @@ class AbstractWorkflowTest extends TestCase
         $this->assertNull($workflow->getProtectedProperty('workflowDescription'));
     }
 
-    public function testSetConfigAppliesValuesWhenKeyedByResourceId(): void
+    public function testSetConfigAppliesValuesKeyedByWorkflowIdWhenResourceSet(): void
     {
-        $workflow = new AbstractWorkflowStub();
-        // Drive the string-key branch: simulate a resource id as a string.
-        $workflow->setProtectedProperty('resourceId', 'page-1');
+        $resource           = new ResourceStub();
+        $resource->workflow = 'page';
 
-        $workflow->setConfig([
-            'page-1' => [
+        $workflow = new AbstractWorkflowStub([
+            'page' => [
                 'title'       => 'Page Title',
                 'description' => 'Page Description',
             ],
         ]);
+        // Resolution happens once the resource (and therefore the workflowId)
+        // becomes known.
+        $workflow->setResource($resource);
 
         $this->assertSame(
             ['title' => 'Page Title', 'description' => 'Page Description'],
@@ -47,6 +49,34 @@ class AbstractWorkflowTest extends TestCase
         );
         $this->assertSame('Page Title', $workflow->getProtectedProperty('workflowTitle'));
         $this->assertSame('Page Description', $workflow->getProtectedProperty('workflowDescription'));
+    }
+
+    public function testSetConfigCalledAfterSetResourceIsAppliedImmediately(): void
+    {
+        $resource           = new ResourceStub();
+        $resource->workflow = 'article';
+
+        $workflow = new AbstractWorkflowStub();
+        $workflow->setResource($resource);
+        $workflow->setConfig([
+            'article' => ['title' => 'Article Title'],
+        ]);
+
+        $this->assertSame('Article Title', $workflow->getProtectedProperty('workflowTitle'));
+    }
+
+    public function testSetConfigAcceptsTraversableConfig(): void
+    {
+        $resource           = new ResourceStub();
+        $resource->workflow = 'page';
+
+        $workflow = new AbstractWorkflowStub();
+        $workflow->setConfig(new ArrayIterator([
+            'page' => ['title' => 'Generated Title'],
+        ]));
+        $workflow->setResource($resource);
+
+        $this->assertSame('Generated Title', $workflow->getProtectedProperty('workflowTitle'));
     }
 
     public function testSetResourcePopulatesResourceIdAndWorkflowId(): void
@@ -121,26 +151,26 @@ class AbstractWorkflowTest extends TestCase
         $this->assertSame('/explicit/path', $workflow->getRoutePath());
     }
 
-    public function testGetRoutePathBuildsFromStringResourceId(): void
+    public function testGetRoutePathBuildsFromResourceSlug(): void
     {
+        $resource = new ResourceStub();
+        $resource->setSlug('parent/child');
+
         $workflow = new AbstractWorkflowStub();
-        $workflow->setProtectedProperty('resourceId', 'parent/child');
+        $workflow->setResource($resource);
 
         $this->assertSame('/parent/child', $workflow->getRoutePath());
     }
 
-    public function testGetRoutePathRaisesTypeErrorWhenResourceIdIsArray(): void
+    public function testGetRoutePathFiltersEmptySegmentsFromSlug(): void
     {
-        // setResource() always assigns the array returned by getPrimaryKeys()
-        // to resourceId. AbstractWorkflow::getRoutePath() then explode()s it,
-        // which is invalid. Subclasses (PageWorkflow, ArticleWorkflow) avoid
-        // this by overriding getRoutePath(). This test pins the existing
-        // behaviour so future refactors notice the regression.
-        $workflow = new AbstractWorkflowStub();
-        $workflow->setProtectedProperty('resourceId', ['k' => 'v']);
+        $resource = new ResourceStub();
+        $resource->setSlug('//double//empty');
 
-        $this->expectException(TypeError::class);
-        $workflow->getRoutePath();
+        $workflow = new AbstractWorkflowStub();
+        $workflow->setResource($resource);
+
+        $this->assertSame('/double/empty', $workflow->getRoutePath());
     }
 
     public function testGetRouteTitleDefaultsToNull(): void
