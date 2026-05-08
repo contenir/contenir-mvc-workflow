@@ -9,6 +9,8 @@ use Contenir\Mvc\Workflow\Resource\ResourceInterface;
 use function array_filter;
 use function explode;
 use function implode;
+use function is_array;
+use function iterator_to_array;
 use function sprintf;
 use function str_replace;
 use function strtolower;
@@ -17,6 +19,7 @@ abstract class AbstractWorkflow implements WorkflowInterface
 {
     private ?ResourceInterface $resource    = null;
     protected array $workflowConfig         = [];
+    protected array $rawWorkflowConfig      = [];
     protected ?string $workflowTitle        = null;
     protected ?string $workflowId           = null;
     protected ?string $workflowDescription  = null;
@@ -33,9 +36,7 @@ abstract class AbstractWorkflow implements WorkflowInterface
 
     public function __construct(iterable $workflowConfig = [])
     {
-        if ($workflowConfig !== null) {
-            $this->setConfig($workflowConfig);
-        }
+        $this->setConfig($workflowConfig);
     }
 
     public function setResource(ResourceInterface $resource): void
@@ -44,6 +45,8 @@ abstract class AbstractWorkflow implements WorkflowInterface
 
         $this->resourceId = $resource->getPrimaryKeys();
         $this->workflowId = $resource->workflow ?? 'page';
+
+        $this->resolveWorkflowConfig();
     }
 
     public function getResource(): ?ResourceInterface
@@ -53,7 +56,18 @@ abstract class AbstractWorkflow implements WorkflowInterface
 
     public function setConfig(iterable $config): void
     {
-        $this->workflowConfig      = $config[$this->resourceId] ?? [];
+        $this->rawWorkflowConfig = is_array($config) ? $config : iterator_to_array($config);
+
+        $this->resolveWorkflowConfig();
+    }
+
+    private function resolveWorkflowConfig(): void
+    {
+        if ($this->workflowId === null) {
+            return;
+        }
+
+        $this->workflowConfig      = $this->rawWorkflowConfig[$this->workflowId] ?? [];
         $this->workflowTitle       = $this->workflowConfig['title'] ?? $this->workflowTitle;
         $this->workflowDescription = $this->workflowConfig['description'] ?? $this->workflowDescription;
     }
@@ -100,7 +114,7 @@ abstract class AbstractWorkflow implements WorkflowInterface
     public function getRoutePath(): string
     {
         if ($this->routePath === null) {
-            $parts = explode('/', $this->resourceId);
+            $parts = explode('/', $this->getResource()->getSlug());
 
             return sprintf('/%s', implode('/', array_filter($parts)));
         }

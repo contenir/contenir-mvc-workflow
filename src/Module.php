@@ -39,9 +39,7 @@ class Module
             throw new InvalidArgumentException('No workflow strategy configuration found');
         }
 
-        $strategy = $serviceManager->get($config['type']);
-        $strategy->getNavigationConfig();
-
+        $strategy    = $serviceManager->get($config['type']);
         $routeConfig = $strategy->getRouteConfig();
 
         $router = $serviceManager->get('router');
