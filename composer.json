@@ -43,6 +43,11 @@
             "Contenir\\Mvc\\Workflow\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "ContenirTest\\Mvc\\Workflow\\": "test/"
+        }
+    },
     "scripts": {
         "check": [
             "@cs-check",
