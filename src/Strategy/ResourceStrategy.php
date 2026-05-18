@@ -164,6 +164,10 @@ class ResourceStrategy implements ResourceStrategyInterface
                 $this->resources['route'][$routeId] = $config;
             }
 
+            if (! $resource->visible) {
+                continue;
+            }
+
             $page     = $this->getNavigationPage($workflow);
             $children = $resource->children;
 
