@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ContenirTest\Mvc\Workflow\Unit\Workflow;
 
+use Contenir\Mvc\Workflow\Workflow\AbstractArticleWorkflow;
 use Contenir\Mvc\Workflow\Workflow\ArticleWorkflow;
 use ContenirTest\Mvc\Workflow\TestAsset\Controller\NewsController;
 use ContenirTest\Mvc\Workflow\TestAsset\Resource\ResourceFactory;
@@ -14,7 +15,7 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(ArticleWorkflow::class)]
+#[CoversClass(AbstractArticleWorkflow::class)]
 #[Group('unit')]
 final class ArticleWorkflowTest extends TestCase
 {

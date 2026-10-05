@@ -6,21 +6,23 @@ plugins of `Contenir\Mvc\Workflow\PluginManager`, looked up by the resource's
 
 ## Built-in workflows
 
-| Class | Route | Actions |
-| --- | --- | --- |
-| `PageWorkflow` | `Literal` at the resource path | `index` |
-| `PageActionWorkflow` | `segment` `"<path>[/:action]"` | `index` by default, any action by URL |
-| `ArticleWorkflow` | `Literal` at the resource path, plus a `segment` child route `"[/:slug]"` named after `$segment` (`post`) | `index` for the listing, `view` for an article |
+Each built-in workflow is a final class with an abstract base to extend:
+
+| Final class | Extend | Route | Actions |
+| --- | --- | --- | --- |
+| `PageWorkflow` | `AbstractPageWorkflow` | `Literal` at the resource path | `index` |
+| `PageActionWorkflow` | `AbstractPageActionWorkflow` | `segment` `"<path>[/:action]"` | `index` by default, any action by URL |
+| `ArticleWorkflow` | `AbstractArticleWorkflow` | `Literal` at the resource path, plus a `segment` child route `"[/:slug]"` named after `$segment` (`post`) | `index` for the listing, `view` for an article |
 
 Every route's defaults carry `controller`, `action` and `resource_id` (the resource's
 primary keys).
 
 ## Writing a workflow
 
-Subclass a built-in workflow and declare its settings as protected properties:
+Extend an abstract base and declare its settings as protected properties:
 
 ```php
-final class ContactWorkflow extends PageActionWorkflow
+final class ContactWorkflow extends AbstractPageActionWorkflow
 {
     protected ?string $controller = ContactController::class;
 }

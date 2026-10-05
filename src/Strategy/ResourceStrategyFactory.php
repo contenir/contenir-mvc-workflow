@@ -6,10 +6,11 @@ namespace Contenir\Mvc\Workflow\Strategy;
 
 use Contenir\Mvc\Workflow\Container\WorkflowConfig;
 use Contenir\Mvc\Workflow\Exception\InvalidArgumentException;
-use Contenir\Mvc\Workflow\PluginManager;
 use Contenir\Mvc\Workflow\Resource\ResourceAdapterInterface;
+use Laminas\ServiceManager\PluginManagerInterface;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
+use ReflectionClass;
 
 use function get_debug_type;
 use function in_array;
@@ -18,7 +19,8 @@ use function is_string;
 use function sprintf;
 
 /**
- * Builds a ResourceStrategy (or the subclass requested) from
+ * Builds the AbstractResourceStrategy subclass requested (ResourceStrategy
+ * for the interface alias or an abstract class) from
  * "workflow_manager.strategy": the "repository" service, and "options",
  * whose "cache" entry names a laminas-cache storage service.
  *
@@ -88,9 +90,10 @@ final class ResourceStrategyFactory
             $strategyOptions['cache'] = $container->get($cacheName);
         }
 
-        $pluginManager = self::service($container, 'workflow_plugin_manager', PluginManager::class);
+        $pluginManager = self::service($container, 'workflow_plugin_manager', PluginManagerInterface::class);
 
-        $class = is_a($requestedName, ResourceStrategy::class, allow_string: true)
+        $class = is_a($requestedName, AbstractResourceStrategy::class, allow_string: true)
+        && (new ReflectionClass($requestedName))->isInstantiable()
             ? $requestedName
             : ResourceStrategy::class;
 

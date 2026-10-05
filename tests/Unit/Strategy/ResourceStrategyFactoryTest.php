@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace ContenirTest\Mvc\Workflow\Unit\Strategy;
 
 use Contenir\Mvc\Workflow\Exception\InvalidArgumentException;
-use Contenir\Mvc\Workflow\PluginManager;
 use Contenir\Mvc\Workflow\Resource\ResourceAdapterInterface;
+use Contenir\Mvc\Workflow\Strategy\AbstractResourceStrategy;
 use Contenir\Mvc\Workflow\Strategy\ResourceStrategy;
 use Contenir\Mvc\Workflow\Strategy\ResourceStrategyFactory;
 use Contenir\Mvc\Workflow\Strategy\ResourceStrategyInterface;
 use ContenirTest\Mvc\Workflow\TestAsset\Container\InMemoryContainer;
+use ContenirTest\Mvc\Workflow\TestAsset\Strategy\SiteResourceStrategy;
 use Laminas\Cache\Storage\StorageInterface;
+use Laminas\ServiceManager\PluginManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -34,6 +36,31 @@ final class ResourceStrategyFactoryTest extends TestCase
             'empty cache'    => [['repository' => 'my-repo', 'options' => ['cache' => '']]],
             'null cache'     => [['repository' => 'my-repo', 'options' => ['cache' => null]]],
         ];
+    }
+
+    /**
+     * @return array<string, array{class-string, class-string}>
+     */
+    public static function requestedClassProvider(): array
+    {
+        return [
+            'interface alias'   => [ResourceStrategyInterface::class, ResourceStrategy::class],
+            'abstract base'     => [AbstractResourceStrategy::class, ResourceStrategy::class],
+            'application class' => [SiteResourceStrategy::class, SiteResourceStrategy::class],
+        ];
+    }
+
+    /**
+     * @param class-string $requested
+     * @param class-string $expected
+     */
+    #[Test]
+    #[DataProvider('requestedClassProvider')]
+    public function buildsTheRequestedConcreteStrategy(string $requested, string $expected): void
+    {
+        $strategy = (new ResourceStrategyFactory())($this->container(['repository' => 'my-repo']), $requested);
+
+        static::assertSame($expected, $strategy::class);
     }
 
     #[Test]
@@ -64,17 +91,6 @@ final class ResourceStrategyFactoryTest extends TestCase
     }
 
     #[Test]
-    public function interfaceAliasBuildsAResourceStrategy(): void
-    {
-        $strategy = (new ResourceStrategyFactory())(
-            $this->container(['repository' => 'my-repo']),
-            ResourceStrategyInterface::class,
-        );
-
-        static::assertSame(ResourceStrategy::class, $strategy::class);
-    }
-
-    #[Test]
     public function repositoryMustBeAResourceAdapter(): void
     {
         $this->expectException(InvalidArgumentException::class);
@@ -102,7 +118,7 @@ final class ResourceStrategyFactoryTest extends TestCase
     {
         $repository    = $this->createStub(ResourceAdapterInterface::class);
         $cache         = $this->createStub(StorageInterface::class);
-        $pluginManager = $this->createStub(PluginManager::class);
+        $pluginManager = $this->createStub(PluginManagerInterface::class);
 
         $strategy = (new ResourceStrategyFactory())(
             $this->container(
@@ -128,7 +144,7 @@ final class ResourceStrategyFactoryTest extends TestCase
         return new InMemoryContainer([
             'config'                  => ['workflow_manager' => ['strategy' => $strategyConfig]],
             'my-repo'                 => $this->createStub(ResourceAdapterInterface::class),
-            'workflow_plugin_manager' => $this->createStub(PluginManager::class),
+            'workflow_plugin_manager' => $this->createStub(PluginManagerInterface::class),
             ...$services,
         ]);
     }

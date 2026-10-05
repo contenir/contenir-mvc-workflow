@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Contenir\Mvc\Workflow\Workflow;
 
+use Contenir\Mvc\Workflow\Exception\RuntimeException;
+use Laminas\Router\Http\Literal;
 use Override;
 
 /**
- * Base for article listings with a child route per article.
+ * Base for article listings: a literal route to the index action, with a
+ * "[/:slug]" child route (named after $segment) to the view action.
  *
  * @api
  */
@@ -27,7 +30,37 @@ abstract class AbstractArticleWorkflow extends AbstractWorkflow
 
     /**
      * @return array<string, mixed>
+     *
+     * @throws RuntimeException When no resource or controller is set.
      */
     #[Override]
-    abstract public function getRouteConfig(): array;
+    public function getRouteConfig(): array
+    {
+        return [
+            'type'          => Literal::class,
+            'options'       => [
+                'route'    => $this->getRoutePath(),
+                'defaults' => [
+                    'controller'  => $this->getRouteController(),
+                    'action'      => 'index',
+                    'resource_id' => $this->requireResource()->getPrimaryKeys(),
+                ],
+            ],
+            'may_terminate' => true,
+            'child_routes'  => [
+                (string) $this->segment => [
+                    'type'    => 'segment',
+                    'options' => [
+                        'route'       => '[/:slug]',
+                        'constraints' => [
+                            'slug' => '[a-zA-Z0-9_-]+',
+                        ],
+                        'defaults'    => [
+                            'action' => 'view',
+                        ],
+                    ],
+                ],
+            ],
+        ];
+    }
 }

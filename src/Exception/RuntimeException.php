@@ -12,4 +12,4 @@ use RuntimeException as PhpRuntimeException;
  *
  * @api
  */
-class RuntimeException extends PhpRuntimeException implements ExceptionInterface {}
+final class RuntimeException extends PhpRuntimeException implements ExceptionInterface {}

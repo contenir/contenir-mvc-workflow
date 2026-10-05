@@ -6,9 +6,9 @@ namespace ContenirTest\Mvc\Workflow\Unit\Strategy;
 
 use Contenir\Mvc\Workflow\Exception\InvalidArgumentException;
 use Contenir\Mvc\Workflow\Exception\RuntimeException;
-use Contenir\Mvc\Workflow\PluginManager;
 use Contenir\Mvc\Workflow\Resource\ResourceAdapterInterface;
 use Contenir\Mvc\Workflow\Resource\ResourceInterface;
+use Contenir\Mvc\Workflow\Strategy\AbstractResourceStrategy;
 use Contenir\Mvc\Workflow\Strategy\ResourceStrategy;
 use Contenir\Mvc\Workflow\Workflow\WorkflowInterface;
 use ContenirTest\Mvc\Workflow\TestAsset\Resource\MagicResource;
@@ -19,6 +19,7 @@ use ContenirTest\Mvc\Workflow\TestAsset\Workflow\ConfiguredWorkflow;
 use ContenirTest\Mvc\Workflow\TestAsset\Workflow\RoutelessWorkflow;
 use DateTimeImmutable;
 use Laminas\Cache\Storage\StorageInterface;
+use Laminas\ServiceManager\PluginManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -30,7 +31,7 @@ use function array_key_exists;
 use function array_keys;
 use function array_map;
 
-#[CoversClass(ResourceStrategy::class)]
+#[CoversClass(AbstractResourceStrategy::class)]
 #[Group('unit')]
 final class ResourceStrategyTest extends TestCase
 {
@@ -192,7 +193,7 @@ final class ResourceStrategyTest extends TestCase
     public function cacheOptionIsPassedToSetCache(): void
     {
         $cache    = $this->createStub(StorageInterface::class);
-        $strategy = new ResourceStrategy($this->createStub(PluginManager::class), self::repository([]), [
+        $strategy = new ResourceStrategy($this->createStub(PluginManagerInterface::class), self::repository([]), [
             'cache' => $cache,
         ]);
 
@@ -217,13 +218,14 @@ final class ResourceStrategyTest extends TestCase
             slug: 'about',
             overrides: ['children' => [$child]],
         );
-        $strategy = new class($overriddenPage, $this->plugins(), self::repository([$parent])) extends ResourceStrategy {
+        $strategy = new class($overriddenPage, $this->plugins(), self::repository([$parent])) extends
+            AbstractResourceStrategy {
             /**
              * @param array<string, mixed> $overriddenPage
              */
             public function __construct(
                 private readonly array $overriddenPage,
-                PluginManager $pluginManager,
+                PluginManagerInterface $pluginManager,
                 ResourceAdapterInterface $repository,
             ) {
                 parent::__construct($pluginManager, $repository);
@@ -266,9 +268,9 @@ final class ResourceStrategyTest extends TestCase
     #[Test]
     public function collaboratorsCanBeReplaced(): void
     {
-        $pluginManager = $this->createStub(PluginManager::class);
+        $pluginManager = $this->createStub(PluginManagerInterface::class);
         $repository    = self::repository([]);
-        $strategy      = new ResourceStrategy($this->createStub(PluginManager::class), self::repository([]));
+        $strategy      = new ResourceStrategy($this->createStub(PluginManagerInterface::class), self::repository([]));
 
         $strategy->setPluginManager($pluginManager);
         $strategy->setRepository($repository);
@@ -310,7 +312,7 @@ final class ResourceStrategyTest extends TestCase
     public function eachResourceGetsTheWorkflowItNames(): void
     {
         $built         = [];
-        $pluginManager = $this->createStub(PluginManager::class);
+        $pluginManager = $this->createStub(PluginManagerInterface::class);
         $pluginManager->method('build')
             ->willReturnCallback(static function (string $name) use (&$built): ConfiguredWorkflow {
                 $built[] = $name;
@@ -333,7 +335,7 @@ final class ResourceStrategyTest extends TestCase
     #[Test]
     public function exposesItsCollaborators(): void
     {
-        $pluginManager = $this->createStub(PluginManager::class);
+        $pluginManager = $this->createStub(PluginManagerInterface::class);
         $repository    = self::repository([]);
         $strategy      = new ResourceStrategy($pluginManager, $repository);
 
@@ -433,7 +435,7 @@ final class ResourceStrategyTest extends TestCase
     #[Test]
     public function navigationPageNeedsAnAbstractWorkflow(): void
     {
-        $strategy = new ResourceStrategy($this->createStub(PluginManager::class), self::repository([]));
+        $strategy = new ResourceStrategy($this->createStub(PluginManagerInterface::class), self::repository([]));
 
         $this->expectException(InvalidArgumentException::class);
 
@@ -443,7 +445,7 @@ final class ResourceStrategyTest extends TestCase
     #[Test]
     public function navigationPageNeedsAResource(): void
     {
-        $strategy = new ResourceStrategy($this->createStub(PluginManager::class), self::repository([]));
+        $strategy = new ResourceStrategy($this->createStub(PluginManagerInterface::class), self::repository([]));
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Workflow ' . ConfiguredWorkflow::class . ' has no resource set');
@@ -458,7 +460,7 @@ final class ResourceStrategyTest extends TestCase
     #[DataProvider('noParentLandingPageProvider')]
     public function parentIsNotItsOwnLandingPageOtherwise(bool $option, array $children): void
     {
-        $strategy = new ResourceStrategy($this->createStub(PluginManager::class), self::repository([]), [
+        $strategy = new ResourceStrategy($this->createStub(PluginManagerInterface::class), self::repository([]), [
             'use_parent_as_landing_page' => $option,
         ]);
         $workflow = new ConfiguredWorkflow();
@@ -471,7 +473,7 @@ final class ResourceStrategyTest extends TestCase
     #[DataProvider('parentLandingPageProvider')]
     public function parentWithChildrenBecomesItsOwnLandingPageWhenEnabled(?string $routeTitle, string $label): void
     {
-        $strategy = new ResourceStrategy($this->createStub(PluginManager::class), self::repository([]), [
+        $strategy = new ResourceStrategy($this->createStub(PluginManagerInterface::class), self::repository([]), [
             'use_parent_as_landing_page' => true,
         ]);
         $workflow = new ConfiguredWorkflow(routeTitle: $routeTitle);
@@ -524,7 +526,7 @@ final class ResourceStrategyTest extends TestCase
     #[Test]
     public function setOptionsReturnsTheStrategy(): void
     {
-        $strategy = new ResourceStrategy($this->createStub(PluginManager::class), self::repository([]));
+        $strategy = new ResourceStrategy($this->createStub(PluginManagerInterface::class), self::repository([]));
 
         static::assertSame($strategy, $strategy->setOptions(['use_parent_as_landing_page' => true]));
     }
@@ -628,7 +630,7 @@ final class ResourceStrategyTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Method setUnknownOption() does not exist');
 
-        new ResourceStrategy($this->createStub(PluginManager::class), self::repository([]), [
+        new ResourceStrategy($this->createStub(PluginManagerInterface::class), self::repository([]), [
             'unknown_option' => 'value',
         ]);
     }
@@ -669,7 +671,10 @@ final class ResourceStrategyTest extends TestCase
     {
         $workflow->setResource($resource);
 
-        return (new ResourceStrategy($this->createStub(PluginManager::class), self::repository([])))->getNavigationPage(
+        return (new ResourceStrategy(
+            $this->createStub(PluginManagerInterface::class),
+            self::repository([]),
+        ))->getNavigationPage(
             $workflow,
         );
     }
@@ -680,9 +685,9 @@ final class ResourceStrategyTest extends TestCase
      *
      * @param array<string, callable(): WorkflowInterface|object> $factories
      */
-    private function plugins(array $factories = []): PluginManager
+    private function plugins(array $factories = []): PluginManagerInterface
     {
-        $pluginManager = $this->createStub(PluginManager::class);
+        $pluginManager = $this->createStub(PluginManagerInterface::class);
         $pluginManager->method('build')
             ->willReturnCallback(static fn(string $name): object => array_key_exists($name, $factories)
                 ? $factories[$name]()

@@ -12,9 +12,10 @@ the resource's route (a literal page, a page with actions, an article listing wi
 caches the result, adds the routes to the router on bootstrap and feeds the navigation
 factory.
 
-- **Workflows:** `PageWorkflow`, `PageActionWorkflow`, `ArticleWorkflow`, and the
-  `AbstractWorkflow` / `AbstractArticleWorkflow` bases. See [docs/workflows.md](docs/workflows.md).
-- **Strategy:** `ResourceStrategy` and its factory. See [docs/strategy.md](docs/strategy.md).
+- **Workflows:** extend `AbstractPageWorkflow`, `AbstractPageActionWorkflow`,
+  `AbstractArticleWorkflow` or `AbstractWorkflow`. The concrete `PageWorkflow`,
+  `PageActionWorkflow` and `ArticleWorkflow` are final. See [docs/workflows.md](docs/workflows.md).
+- **Strategy:** `ResourceStrategy` (final), `AbstractResourceStrategy` to customise it, and the factory. See [docs/strategy.md](docs/strategy.md).
 - **Navigation:** `WorkflowNavigationFactory`. See [docs/navigation.md](docs/navigation.md).
 - **Configuration:** every key, with defaults. See [docs/configuration.md](docs/configuration.md).
 
@@ -72,9 +73,9 @@ Resources that also implement `Contenir\Metadata\MetadataInterface` get a sitema
 
 ```php
 use Application\Controller\NewsController;
-use Contenir\Mvc\Workflow\Workflow\ArticleWorkflow;
+use Contenir\Mvc\Workflow\Workflow\AbstractArticleWorkflow;
 
-final class NewsWorkflow extends ArticleWorkflow
+final class NewsWorkflow extends AbstractArticleWorkflow
 {
     protected ?string $controller      = NewsController::class;
     protected ?string $changeFrequency = 'weekly';

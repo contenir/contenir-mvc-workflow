@@ -11,4 +11,4 @@ use InvalidArgumentException as PhpInvalidArgumentException;
  *
  * @api
  */
-class InvalidArgumentException extends PhpInvalidArgumentException implements ExceptionInterface {}
+final class InvalidArgumentException extends PhpInvalidArgumentException implements ExceptionInterface {}

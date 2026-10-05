@@ -6,7 +6,9 @@ namespace ContenirTest\Mvc\Workflow\Integration\Navigation;
 
 use Contenir\Mvc\Workflow\Exception\InvalidArgumentException;
 use Contenir\Mvc\Workflow\Module;
+use Contenir\Mvc\Workflow\Navigation\AbstractWorkflowNavigationFactory;
 use Contenir\Mvc\Workflow\Navigation\WorkflowNavigationFactory;
+use ContenirTest\Mvc\Workflow\TestAsset\Navigation\SiteNavigationFactory;
 use ContenirTest\Mvc\Workflow\Trait\WorkflowServicesTrait;
 use Laminas\Http\PhpEnvironment\Request;
 use Laminas\Mvc\Application;
@@ -25,7 +27,7 @@ use stdClass;
 use function array_map;
 use function iterator_to_array;
 
-#[CoversClass(WorkflowNavigationFactory::class)]
+#[CoversClass(AbstractWorkflowNavigationFactory::class)]
 #[Group('integration')]
 final class WorkflowNavigationFactoryTest extends TestCase
 {
@@ -109,6 +111,12 @@ final class WorkflowNavigationFactoryTest extends TestCase
         $this->expectExceptionMessage($message);
 
         (new WorkflowNavigationFactory())($this->servicesWithApplication($config, $services), Navigation::class);
+    }
+
+    #[Test]
+    public function subclassesMayChangeTheDefaultName(): void
+    {
+        static::assertSame('site-default', (new SiteNavigationFactory())->getName());
     }
 
     /**

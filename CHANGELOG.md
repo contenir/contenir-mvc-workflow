@@ -12,8 +12,11 @@ for strategies without a cache and for the default service wiring. See
 
 ### Changed
 
-- `Module`, `ConfigProvider`, `PluginManagerFactory`, `ResourceStrategyFactory` and
-  `WorkflowFactory` are `final`.
+- Every concrete class is `final`. Extension points are the new
+  `AbstractResourceStrategy`, `AbstractWorkflowNavigationFactory`, `AbstractPageWorkflow`
+  and `AbstractPageActionWorkflow`, plus `AbstractArticleWorkflow` (which now carries
+  the article route) and `AbstractWorkflow`.
+- The strategy's plugin manager is typed against laminas' `PluginManagerInterface`.
 - Requires PHP 8.3, 8.4 or 8.5, and `contenir/contenir-metadata` ^2.0.
 - `WorkflowInterface` declares native return types: `getRouteId(): string`,
   `getRoutePath(): string`, `getRouteConfig(): array`, `getNavigationConfig(): array`.

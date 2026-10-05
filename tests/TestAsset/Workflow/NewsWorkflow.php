@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace ContenirTest\Mvc\Workflow\TestAsset\Workflow;
 
-use Contenir\Mvc\Workflow\Workflow\ArticleWorkflow;
+use Contenir\Mvc\Workflow\Workflow\AbstractArticleWorkflow;
 use ContenirTest\Mvc\Workflow\TestAsset\Controller\NewsController;
 
 /**
  * An article workflow as applications declare one.
  */
-final class NewsWorkflow extends ArticleWorkflow
+final class NewsWorkflow extends AbstractArticleWorkflow
 {
     protected ?string $controller = NewsController::class;
 

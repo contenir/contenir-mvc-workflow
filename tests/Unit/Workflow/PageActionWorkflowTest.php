@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace ContenirTest\Mvc\Workflow\Unit\Workflow;
 
-use Contenir\Mvc\Workflow\Workflow\PageActionWorkflow;
+use Contenir\Mvc\Workflow\Workflow\AbstractPageActionWorkflow;
 use ContenirTest\Mvc\Workflow\TestAsset\Controller\BlogController;
 use ContenirTest\Mvc\Workflow\TestAsset\Resource\ResourceFactory;
 use ContenirTest\Mvc\Workflow\TestAsset\Workflow\BlogActionWorkflow;
@@ -13,7 +13,7 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(PageActionWorkflow::class)]
+#[CoversClass(AbstractPageActionWorkflow::class)]
 #[Group('unit')]
 final class PageActionWorkflowTest extends TestCase
 {

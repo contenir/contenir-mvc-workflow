@@ -94,31 +94,59 @@ workflow that only implemented the interface failed with "Call to undefined meth
 | `ResourceStrategyFactory::__invoke()` | `ResourceStrategyInterface::class` failed (cannot instantiate an interface) | builds a `ResourceStrategy` for the interface |
 | `ResourceStrategyFactory` `cache` option | always resolved from the container | a service name is resolved; an instance is used as is; `null`/`''` means no cache |
 
-## 5. Wiring classes are `final`
+## 5. Every concrete class is `final`
 
-`Module`, `ConfigProvider`, `PluginManagerFactory`, `Strategy\ResourceStrategyFactory`
-and `Workflow\WorkflowFactory` are now `final`. Extend nothing from them. To change
-how a service is built, register your own factory for it:
+Extension points are abstract classes and interfaces. Wiring classes (`Module`,
+`ConfigProvider`, `PluginManager`, `PluginManagerFactory`, `ResourceStrategyFactory`,
+`WorkflowFactory`) and the exceptions are final with nothing to replace them: register
+your own factory instead of extending one, and catch `Exception\ExceptionInterface` or
+the SPL parents instead of subclassing the exceptions.
+
+| 1.x: extend | 2.0: extend instead | 2.0 final class |
+| --- | --- | --- |
+| `Workflow\PageWorkflow` | `Workflow\AbstractPageWorkflow` | `Workflow\PageWorkflow` |
+| `Workflow\PageActionWorkflow` | `Workflow\AbstractPageActionWorkflow` | `Workflow\PageActionWorkflow` |
+| `Workflow\ArticleWorkflow` | `Workflow\AbstractArticleWorkflow` | `Workflow\ArticleWorkflow` |
+| `Strategy\ResourceStrategy` | `Strategy\AbstractResourceStrategy` | `Strategy\ResourceStrategy` |
+| `Navigation\WorkflowNavigationFactory` | `Navigation\AbstractWorkflowNavigationFactory` | `Navigation\WorkflowNavigationFactory` |
 
 ```php
 // 1.x
-class MyStrategyFactory extends ResourceStrategyFactory { /* … */ }
+class NewsWorkflow extends \Contenir\Mvc\Workflow\Workflow\ArticleWorkflow { /* … */ }
+class HomeWorkflow extends \Contenir\Mvc\Workflow\Workflow\PageWorkflow { /* … */ }
+class SpaWorkflow extends \Contenir\Mvc\Workflow\Workflow\PageActionWorkflow { /* … */ }
+class ResourceStrategy extends \Contenir\Mvc\Workflow\Strategy\ResourceStrategy { /* … */ }
+class CmsNavigationFactory extends \Contenir\Mvc\Workflow\Navigation\WorkflowNavigationFactory { /* … */ }
 
 // 2.0
-final class MyStrategyFactory
-{
-    public function __invoke(ContainerInterface $container, string $requestedName): MyStrategy
-    {
-        $strategy = (new ResourceStrategyFactory())($container, MyStrategy::class);
-        // … adjust $strategy …
-        return $strategy;
-    }
-}
+class NewsWorkflow extends \Contenir\Mvc\Workflow\Workflow\AbstractArticleWorkflow { /* … */ }
+class HomeWorkflow extends \Contenir\Mvc\Workflow\Workflow\AbstractPageWorkflow { /* … */ }
+class SpaWorkflow extends \Contenir\Mvc\Workflow\Workflow\AbstractPageActionWorkflow { /* … */ }
+class ResourceStrategy extends \Contenir\Mvc\Workflow\Strategy\AbstractResourceStrategy { /* … */ }
+class CmsNavigationFactory extends \Contenir\Mvc\Workflow\Navigation\AbstractWorkflowNavigationFactory { /* … */ }
 ```
 
-Classes meant for extension stay open: the workflows, `ResourceStrategy`,
-`WorkflowNavigationFactory` (sites subclass it to set `$name`), `PluginManager` and the
-exceptions.
+The bodies don't change. Notes:
+
+- `AbstractArticleWorkflow::getRouteConfig()` is no longer abstract: it is the article
+  route `ArticleWorkflow` had. Subclasses that implemented their own keep overriding it.
+- `PageActionWorkflow` no longer extends `PageWorkflow`; both extend
+  `AbstractPageWorkflow`. Replace `instanceof PageWorkflow` checks with
+  `instanceof AbstractPageWorkflow`.
+- `ResourceStrategyFactory` builds the requested `AbstractResourceStrategy` subclass, or
+  `ResourceStrategy` when the interface or an abstract class is requested. Registering
+  `App\ResourceStrategy::class => ResourceStrategyFactory::class` works as before.
+- The strategy's plugin manager is typed against
+  `Laminas\ServiceManager\PluginManagerInterface` (constructor, `getPluginManager()`,
+  `setPluginManager()`), not the now-final `PluginManager`.
+
+```php
+// 1.x
+public function __construct(PluginManager $pluginManager, ResourceAdapterInterface $repository, iterable $options = [])
+
+// 2.0
+public function __construct(PluginManagerInterface $pluginManager, ResourceAdapterInterface $repository, iterable $options = [])
+```
 
 ## 6. Exceptions instead of errors
 

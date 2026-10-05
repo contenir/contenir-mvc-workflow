@@ -42,10 +42,11 @@ the workflow's `$routeTitle`) is inserted between them when:
 - the workflow has at most one child route, the resource has children, and the
   `use_parent_as_landing_page` option is on.
 
-Applications commonly subclass the strategy to change single pages:
+`ResourceStrategy` is final. Applications extend `AbstractResourceStrategy`, which holds
+all the behaviour, to change single pages:
 
 ```php
-final class ResourceStrategy extends \Contenir\Mvc\Workflow\Strategy\ResourceStrategy
+final class ResourceStrategy extends \Contenir\Mvc\Workflow\Strategy\AbstractResourceStrategy
 {
     public function getNavigationPage(WorkflowInterface $workflow): array
     {
@@ -64,9 +65,9 @@ Children are still nested under an overridden page.
 
 | Method | Notes |
 | --- | --- |
-| `__construct(PluginManager, ResourceAdapterInterface, iterable $options = [])` | See [configuration](configuration.md) for the options |
+| `__construct(PluginManagerInterface, ResourceAdapterInterface, iterable $options = [])` | See [configuration](configuration.md) for the options |
 | `setOptions(iterable)` | Calls `set<Key>()` setters or stores known options |
-| `getPluginManager()` / `setPluginManager()` | |
+| `getPluginManager()` / `setPluginManager()` | Typed against laminas' `PluginManagerInterface` |
 | `getRepository()` / `setRepository()` | |
 | `getCache(): ?StorageInterface` / `setCache()` | `null` when no cache is configured |
 | `getRouteConfig()` / `setRouteConfig()` | Built routes; a cache hit or rebuild replaces what was set |

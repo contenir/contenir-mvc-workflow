@@ -13,7 +13,7 @@ use Laminas\ServiceManager\AbstractPluginManager;
  *
  * @api
  */
-class PluginManager extends AbstractPluginManager
+final class PluginManager extends AbstractPluginManager
 {
     /** @var class-string<Workflow\WorkflowInterface>|null */
     protected $instanceOf = Workflow\WorkflowInterface::class;

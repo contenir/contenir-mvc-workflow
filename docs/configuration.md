@@ -8,7 +8,7 @@ default to no strategy:
 | `Contenir\Mvc\Workflow\PluginManager` (alias `workflow_plugin_manager`) | `PluginManagerFactory` | Workflow plugins, configured by `workflow_manager` |
 | `Strategy\ResourceStrategyInterface` (alias `workflow_strategy`) | `Strategy\ResourceStrategyFactory` | Builds a `ResourceStrategy` |
 
-Applications usually register their own `ResourceStrategy` subclass with
+Applications usually register their own `AbstractResourceStrategy` subclass with
 `ResourceStrategyFactory` and name it in `workflow_manager.strategy.type`.
 
 ## `workflow_manager`

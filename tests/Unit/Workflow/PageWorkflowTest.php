@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ContenirTest\Mvc\Workflow\Unit\Workflow;
 
 use Contenir\Mvc\Workflow\Exception\RuntimeException;
+use Contenir\Mvc\Workflow\Workflow\AbstractPageWorkflow;
 use Contenir\Mvc\Workflow\Workflow\PageWorkflow;
 use ContenirTest\Mvc\Workflow\TestAsset\Controller\IndexController;
 use ContenirTest\Mvc\Workflow\TestAsset\Resource\ResourceFactory;
@@ -15,7 +16,7 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(PageWorkflow::class)]
+#[CoversClass(AbstractPageWorkflow::class)]
 #[Group('unit')]
 final class PageWorkflowTest extends TestCase
 {

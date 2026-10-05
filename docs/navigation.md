@@ -21,10 +21,11 @@ route match and request, so they can only be built once the module has bootstrap
 and added the routes.
 
 `getName()` returns `workflow_manager.navigation.name` after the factory has run, and
-`cms` before that. Subclasses may override `$name`:
+`cms` before that. `WorkflowNavigationFactory` is final; to change the default name,
+extend `AbstractWorkflowNavigationFactory`:
 
 ```php
-final class CmsNavigationFactory extends WorkflowNavigationFactory
+final class CmsNavigationFactory extends AbstractWorkflowNavigationFactory
 {
     protected string $name = 'cms';
 }
