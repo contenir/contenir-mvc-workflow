@@ -4,15 +4,30 @@ declare(strict_types=1);
 
 namespace Contenir\Mvc\Workflow;
 
+use Contenir\Mvc\Workflow\Container\WorkflowConfig;
 use Contenir\Mvc\Workflow\Exception\InvalidArgumentException;
+use Contenir\Mvc\Workflow\Strategy\ResourceStrategyInterface;
 use Laminas\Mvc\MvcEvent;
+use Laminas\Router\RouteStackInterface;
 use Psr\Container\ContainerExceptionInterface;
-use Psr\Container\NotFoundExceptionInterface;
 
-class Module
+use function get_debug_type;
+use function sprintf;
+
+/**
+ * laminas-mvc module: registers the services and, on bootstrap, adds the
+ * strategy's routes to the router.
+ *
+ * @api
+ */
+final class Module
 {
     /**
-     * Retrieve default laminas-paginator config for laminas-mvc context.
+     * @return array{
+     *     service_manager: array{aliases: array<string, class-string>, factories: array<class-string, class-string>},
+     *     workflow_manager: array{strategy: array<never, never>},
+     *     workflow: array<never, never>,
+     * }
      */
     public function getConfig(): array
     {
@@ -26,23 +41,44 @@ class Module
     }
 
     /**
-     * @throws NotFoundExceptionInterface
+     * @throws InvalidArgumentException When the strategy is not configured.
      * @throws ContainerExceptionInterface
+     *
+     * @mago-expect analysis:mixed-assignment Container services are untyped; narrowed here.
      */
     public function onBootstrap(MvcEvent $event): void
     {
-        $application    = $event->getApplication();
-        $serviceManager = $application->getServiceManager();
+        $serviceManager = $event->getApplication()->getServiceManager();
+        $config         = WorkflowConfig::from($serviceManager);
 
-        $config = $serviceManager->get('config')['workflow_manager']['strategy'] ?? null;
-        if (empty($config)) {
+        if ([] === $config->strategy()) {
             throw new InvalidArgumentException('No workflow strategy configuration found');
         }
 
-        $strategy    = $serviceManager->get($config['type']);
-        $routeConfig = $strategy->getRouteConfig();
+        $strategyType = $config->strategyType();
+        if (null === $strategyType) {
+            throw new InvalidArgumentException('No workflow strategy type configured');
+        }
+
+        $strategy = $serviceManager->get($strategyType);
+        if (! $strategy instanceof ResourceStrategyInterface) {
+            throw new InvalidArgumentException(sprintf(
+                'Workflow strategy "%s" must implement %s, %s given',
+                $strategyType,
+                ResourceStrategyInterface::class,
+                get_debug_type($strategy),
+            ));
+        }
 
         $router = $serviceManager->get('router');
-        $router->addRoutes($routeConfig);
+        if (! $router instanceof RouteStackInterface) {
+            throw new InvalidArgumentException(sprintf(
+                'The "router" service must implement %s, %s given',
+                RouteStackInterface::class,
+                get_debug_type($router),
+            ));
+        }
+
+        $router->addRoutes($strategy->getRouteConfig());
     }
 }

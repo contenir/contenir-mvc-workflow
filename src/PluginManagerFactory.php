@@ -4,20 +4,27 @@ declare(strict_types=1);
 
 namespace Contenir\Mvc\Workflow;
 
-use interop\container\containerinterface;
+use Contenir\Mvc\Workflow\Container\WorkflowConfig;
 use Psr\Container\ContainerExceptionInterface;
-use Psr\Container\NotFoundExceptionInterface;
+use Psr\Container\ContainerInterface;
 
-class PluginManagerFactory
+/**
+ * Builds the workflow plugin manager from the "workflow_manager" configuration.
+ *
+ * @api
+ */
+final class PluginManagerFactory
 {
     /**
+     * @param array<array-key, mixed>|null $options
+     *
      * @throws ContainerExceptionInterface
-     * @throws NotFoundExceptionInterface
+     *
+     * @mago-expect analysis:unused-parameter Laminas factory signature; the plugin manager needs neither.
+     * @mago-expect analysis:less-specific-nested-argument-type laminas-servicemanager validates its own configuration.
      */
-    public function __invoke(containerinterface $container, string $name, ?array $options = null): PluginManager
+    public function __invoke(ContainerInterface $container, string $name, ?array $options = null): PluginManager
     {
-        $config = $container->get('config');
-
-        return new PluginManager($container, $config['workflow_manager'] ?: []);
+        return new PluginManager($container, WorkflowConfig::from($container)->workflowManager());
     }
 }

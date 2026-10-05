@@ -4,27 +4,44 @@ declare(strict_types=1);
 
 namespace Contenir\Mvc\Workflow\Workflow;
 
+use Contenir\Mvc\Workflow\Container\WorkflowConfig;
+use Contenir\Mvc\Workflow\Exception\InvalidArgumentException;
 use Laminas\ServiceManager\Factory\FactoryInterface;
+use Override;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
-use Psr\Container\NotFoundExceptionInterface;
 
-class WorkflowFactory implements FactoryInterface
+use function is_a;
+use function sprintf;
+
+/**
+ * Creates any AbstractWorkflow subclass and gives it the "workflow" configuration.
+ *
+ * @api
+ */
+final class WorkflowFactory implements FactoryInterface
 {
     /**
-     * Create an object
+     * @param string $requestedName
+     * @param array<array-key, mixed>|null $options
      *
-     * @param string             $requestedName
-     * @param null|array         $options
-     * @throws ContainerExceptionInterface If any other error occurs.
-     * @throws NotFoundExceptionInterface
+     * @throws InvalidArgumentException When $requestedName is not an AbstractWorkflow subclass.
+     * @throws ContainerExceptionInterface
+     *
+     * @mago-expect analysis:unsafe-instantiation Workflows are documented as argument-less constructible.
      */
-    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): object
+    #[Override]
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null): AbstractWorkflow
     {
-        $config = $container->get('config')['workflow'];
+        if (! is_a($requestedName, AbstractWorkflow::class, allow_string: true)) {
+            throw new InvalidArgumentException(sprintf(
+                'WorkflowFactory can only create %s subclasses',
+                AbstractWorkflow::class,
+            ));
+        }
 
         $workflow = new $requestedName();
-        $workflow->setConfig($config);
+        $workflow->setConfig(WorkflowConfig::from($container)->workflows());
 
         return $workflow;
     }
