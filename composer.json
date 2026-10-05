@@ -28,6 +28,7 @@
         "psr/container": "^1.1 || ^2.0"
     },
     "require-dev": {
+        "infection/infection": "^0.34.1",
         "laminas/laminas-http": "^2.19",
         "php-db/phpdb-qa-tools": "0.1.x-dev",
         "phpunit/phpunit": "^11.5.42"
@@ -48,7 +49,10 @@
         "platform": {
             "php": "8.3.99"
         },
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "infection/extension-installer": true
+        }
     },
     "extra": {
         "branch-alias": {
@@ -64,7 +68,8 @@
             "@cs-check",
             "@static-analysis",
             "@test",
-            "@test-integration"
+            "@test-integration",
+            "@mutation-test"
         ],
         "cs-check": [
             "mago format --check",
@@ -77,6 +82,7 @@
         "static-analysis": "mago analyze",
         "test": "phpunit --colors=always --testsuite unit",
         "test-coverage": "phpunit --colors=always --coverage-clover clover.xml",
-        "test-integration": "phpunit --colors=always --testsuite integration"
+        "test-integration": "phpunit --colors=always --testsuite integration",
+        "mutation-test": "infection"
     }
 }

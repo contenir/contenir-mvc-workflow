@@ -139,6 +139,7 @@ composer static-analysis   # mago analyze
 composer test              # unit suite: workflows, strategy and factories against test doubles
 composer test-integration  # integration suite: real ServiceManager, router and navigation
 composer test-coverage     # both suites, clover.xml for Codecov
+composer mutation-test     # Infection mutation testing over both suites (needs Xdebug or PCOV)
 ```
 
 ## License
