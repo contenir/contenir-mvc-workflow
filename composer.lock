@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "262b20a0b64e3f122a4021cde55f487a",
+    "content-hash": "6eba5a5ccac59f47b2fba08382b124fd",
     "packages": [
         {
             "name": "brick/varexporter",
@@ -57,16 +57,16 @@
         },
         {
             "name": "contenir/contenir-metadata",
-            "version": "dev-v2/qa-tools",
+            "version": "v2.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/contenir/contenir-metadata.git",
-                "reference": "d1a28a1aec6dde3e9b463d3c994441e8b5fb6a44"
+                "reference": "fbd36a7325429e96bdacf6e9f312e6a66564220f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/contenir/contenir-metadata/zipball/d1a28a1aec6dde3e9b463d3c994441e8b5fb6a44",
-                "reference": "d1a28a1aec6dde3e9b463d3c994441e8b5fb6a44",
+                "url": "https://api.github.com/repos/contenir/contenir-metadata/zipball/fbd36a7325429e96bdacf6e9f312e6a66564220f",
+                "reference": "fbd36a7325429e96bdacf6e9f312e6a66564220f",
                 "shasum": ""
             },
             "require": {
@@ -104,7 +104,7 @@
                 "issues": "https://contenir.com.au/issues",
                 "source": "https://github.com/contenir/contenir-metadata"
             },
-            "time": "2026-10-05T05:18:28+00:00"
+            "time": "2026-10-05T09:28:59+00:00"
         },
         {
             "name": "laminas/laminas-cache",
@@ -3541,17 +3541,9 @@
             "time": "2025-11-17T20:03:58+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "contenir/contenir-metadata",
-            "version": "dev-v2/qa-tools",
-            "alias": "2.0.x-dev",
-            "alias_normalized": "2.0.9999999.9999999-dev"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "contenir/contenir-metadata": 20,
         "php-db/phpdb-qa-tools": 20
     },
     "prefer-stable": true,
@@ -3559,9 +3551,9 @@
     "platform": {
         "php": "~8.3.0 || ~8.4.0 || ~8.5.0"
     },
-    "platform-dev": {},
+    "platform-dev": [],
     "platform-overrides": {
         "php": "8.3.99"
     },
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.6.0"
 }
