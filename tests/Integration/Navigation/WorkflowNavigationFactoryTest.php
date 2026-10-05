@@ -94,6 +94,16 @@ final class WorkflowNavigationFactoryTest extends TestCase
     }
 
     #[Test]
+    public function nameCanBeChanged(): void
+    {
+        $factory = new WorkflowNavigationFactory();
+
+        $factory->setName('footer');
+
+        static::assertSame('footer', $factory->getName());
+    }
+
+    #[Test]
     public function nameDefaultsToCms(): void
     {
         static::assertSame('cms', (new WorkflowNavigationFactory())->getName());

@@ -14,6 +14,8 @@ use Contenir\Mvc\Workflow\Workflow\WorkflowInterface;
 use ContenirTest\Mvc\Workflow\TestAsset\Resource\MagicResource;
 use ContenirTest\Mvc\Workflow\TestAsset\Resource\MetadataResource;
 use ContenirTest\Mvc\Workflow\TestAsset\Resource\ResourceFactory;
+use ContenirTest\Mvc\Workflow\TestAsset\Strategy\OptionlessResourceStrategy;
+use ContenirTest\Mvc\Workflow\TestAsset\Strategy\TracingResourceStrategy;
 use ContenirTest\Mvc\Workflow\TestAsset\Workflow\BareWorkflow;
 use ContenirTest\Mvc\Workflow\TestAsset\Workflow\ConfiguredWorkflow;
 use ContenirTest\Mvc\Workflow\TestAsset\Workflow\RoutelessWorkflow;
@@ -135,6 +137,17 @@ final class ResourceStrategyTest extends TestCase
                 return $this->resources;
             }
         };
+    }
+
+    #[Test]
+    public function cacheCanBeSetDirectly(): void
+    {
+        $cache    = $this->createStub(StorageInterface::class);
+        $strategy = new ResourceStrategy($this->createStub(PluginManagerInterface::class), self::repository([]));
+
+        $strategy->setCache($cache);
+
+        static::assertSame($cache, $strategy->getCache());
     }
 
     #[Test]
@@ -266,6 +279,24 @@ final class ResourceStrategyTest extends TestCase
     }
 
     #[Test]
+    public function childrenFollowTheParentsOwnLandingPage(): void
+    {
+        $parent = ResourceFactory::page(
+            id: 1,
+            slug: 'about',
+            overrides: ['children' => [ResourceFactory::page(
+                id: 2,
+                slug: 'about/team',
+            )]],
+        );
+        $strategy = new ResourceStrategy($this->plugins(), self::repository([$parent]), [
+            'use_parent_as_landing_page' => true,
+        ]);
+
+        static::assertSame(['1-1', '1-2'], array_column($strategy->getNavigationConfig()[0]['pages'] ?? [], 'route'));
+    }
+
+    #[Test]
     public function collaboratorsCanBeReplaced(): void
     {
         $pluginManager = $this->createStub(PluginManagerInterface::class);
@@ -362,6 +393,21 @@ final class ResourceStrategyTest extends TestCase
     }
 
     #[Test]
+    public function hiddenResourcesDoNotHideTheirSiblings(): void
+    {
+        $strategy = new ResourceStrategy($this->plugins(), self::repository([
+            ResourceFactory::page(
+                id: 1,
+                overrides: ['visible' => false],
+            ),
+            ResourceFactory::page(id: 2),
+            ResourceFactory::page(id: 3),
+        ]));
+
+        static::assertSame(['1-2', '1-3'], array_column($strategy->getNavigationConfig(), 'route'));
+    }
+
+    #[Test]
     public function landingPageCollectsTheRoutePages(): void
     {
         $workflow = new ConfiguredWorkflow(
@@ -377,6 +423,20 @@ final class ResourceStrategyTest extends TestCase
             ['Overview', false, ['parent/a', 'parent/b']],
             [$landing['label'], $landing['useRouteMatch'], array_column($landing['pages'], 'route')],
         );
+    }
+
+    #[Test]
+    public function landingPageNeedsMoreThanOneRoutePageSet(): void
+    {
+        $workflow = new ConfiguredWorkflow(
+            routeId: 'parent',
+            pages: ['sub' => [['title' => 'Sub']]],
+        );
+        $workflow->setLandingPage(flag: true);
+
+        $page = $this->navigationPage($workflow, ResourceFactory::page());
+
+        static::assertSame(['parent/sub'], array_column($page['pages'], 'route'));
     }
 
     #[Test]
@@ -465,6 +525,19 @@ final class ResourceStrategyTest extends TestCase
         ]);
         $workflow = new ConfiguredWorkflow();
         $workflow->setResource(ResourceFactory::page(overrides: ['children' => $children]));
+
+        static::assertSame([], $strategy->getNavigationPage($workflow)['pages']);
+    }
+
+    #[Test]
+    public function parentIsNotItsOwnLandingPageWhenASubclassOmitsTheOption(): void
+    {
+        $strategy = new OptionlessResourceStrategy(
+            $this->createStub(PluginManagerInterface::class),
+            self::repository([]),
+        );
+        $workflow = new ConfiguredWorkflow();
+        $workflow->setResource(ResourceFactory::page(overrides: ['children' => [ResourceFactory::page(id: 2)]]));
 
         static::assertSame([], $strategy->getNavigationPage($workflow)['pages']);
     }
@@ -569,6 +642,23 @@ final class ResourceStrategyTest extends TestCase
             ],
             [$page['useRouteMatch'] ?? null, $page['pages']],
         );
+    }
+
+    #[Test]
+    public function subclassesCanDecorateEveryProtectedHook(): void
+    {
+        $strategy = new TracingResourceStrategy(
+            $this->plugins([
+                'page' => static fn(): ConfiguredWorkflow => new ConfiguredWorkflow(pages: [
+                    'sub' => [['title' => 'Sub']],
+                ]),
+            ]),
+            self::repository([ResourceFactory::page()]),
+        );
+
+        $strategy->getNavigationConfig();
+
+        static::assertSame(['build', 'process', 'workflow 1-1', 'sub-page 1-1/sub'], $strategy->trace);
     }
 
     /**

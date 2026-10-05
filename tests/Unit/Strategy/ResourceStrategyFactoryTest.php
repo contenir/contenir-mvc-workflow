@@ -35,6 +35,7 @@ final class ResourceStrategyFactoryTest extends TestCase
             'empty options'  => [['repository' => 'my-repo', 'options' => []]],
             'empty cache'    => [['repository' => 'my-repo', 'options' => ['cache' => '']]],
             'null cache'     => [['repository' => 'my-repo', 'options' => ['cache' => null]]],
+            'false cache'    => [['repository' => 'my-repo', 'options' => ['cache' => false]]],
         ];
     }
 

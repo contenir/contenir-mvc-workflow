@@ -11,6 +11,7 @@ use ContenirTest\Mvc\Workflow\TestAsset\Controller\IndexController;
 use ContenirTest\Mvc\Workflow\TestAsset\Resource\MagicResource;
 use ContenirTest\Mvc\Workflow\TestAsset\Resource\ResourceFactory;
 use ContenirTest\Mvc\Workflow\TestAsset\Workflow\ConfiguredWorkflow;
+use ContenirTest\Mvc\Workflow\TestAsset\Workflow\DescribedWorkflow;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -90,6 +91,14 @@ final class AbstractWorkflowTest extends TestCase
     }
 
     #[Test]
+    public function configIsNotAppliedBeforeAResourceNamesTheWorkflow(): void
+    {
+        $workflow = new ConfiguredWorkflow(workflowConfig: ['' => ['title' => 'Unnamed']]);
+
+        static::assertNull($workflow->getNavigationConfig()['label']);
+    }
+
+    #[Test]
     public function configMayBeTraversable(): void
     {
         $workflow = new ConfiguredWorkflow();
@@ -121,6 +130,15 @@ final class AbstractWorkflowTest extends TestCase
     public function configuredRoutePathIsUsedAsIs(): void
     {
         static::assertSame('/explicit/path', (new ConfiguredWorkflow(routePath: '/explicit/path'))->getRoutePath());
+    }
+
+    #[Test]
+    public function descriptionComesFromTheWorkflowConfig(): void
+    {
+        $workflow = new DescribedWorkflow(['page' => ['title' => 'Pages', 'description' => 'Site pages']]);
+        $workflow->setResource(ResourceFactory::page());
+
+        static::assertSame('Site pages', $workflow->getNavigationConfig()['description']);
     }
 
     #[Test]
