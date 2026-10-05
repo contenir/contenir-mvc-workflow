@@ -21,7 +21,7 @@ factory.
 ## Requirements
 
 - PHP 8.3, 8.4 or 8.5
-- laminas-mvc 3.7+, laminas-router 3.13+, laminas-navigation 2.19+, laminas-servicemanager 3.22+,
+- laminas-mvc 3.8+, laminas-router 3.13+, laminas-navigation 2.19+, laminas-servicemanager 3.22+,
   laminas-cache 3.12+
 - `contenir/contenir-metadata` 2.x
 

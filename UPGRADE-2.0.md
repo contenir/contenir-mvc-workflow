@@ -8,7 +8,7 @@ subclasses that override `getNavigationPage()`, keep working unchanged.
 | --- | --- | --- |
 | PHP | ^8.1 | 8.3, 8.4 or 8.5 |
 | `contenir/contenir-metadata` | ^1.0 | ^2.0 |
-| `laminas/laminas-mvc` | ^3.0 | ^3.7 |
+| `laminas/laminas-mvc` | ^3.0 | ^3.8 |
 | `laminas/laminas-router` | ^3.10 | ^3.13 |
 | `laminas/laminas-navigation` | ^2.16 | ^2.19 |
 | `laminas/laminas-servicemanager` | (implicit) | ^3.22 |
