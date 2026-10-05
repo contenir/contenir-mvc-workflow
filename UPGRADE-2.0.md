@@ -14,7 +14,7 @@ subclasses that override `getNavigationPage()`, keep working unchanged.
 | `laminas/laminas-servicemanager` | (implicit) | ^3.22 |
 
 ```bash
-composer require contenir/contenir-mvc-workflow:^2.0
+composer require contenir/contenir-workflow-laminas-mvc:^2.0
 ```
 
 ## 1. contenir-metadata 2.0
@@ -164,3 +164,16 @@ like `Exception\InvalidArgumentException`.
 
 Projects that must stay on PHP 8.1 or 8.2 can keep using `^1.0`, which is
 maintained on the `1.x` branch.
+
+## Package renamed in 2.1
+
+From 2.1, the package is published as
+`contenir/contenir-workflow-laminas-mvc`. It declares `replace` for
+`contenir/contenir-mvc-workflow`, so the two can never be installed together.
+Switch the requirement:
+
+```bash
+composer remove contenir/contenir-mvc-workflow && composer require contenir/contenir-workflow-laminas-mvc:^2.1
+```
+
+No code changes are needed: namespaces and classes are unchanged.

@@ -1,7 +1,9 @@
-# contenir/contenir-mvc-workflow
+# contenir/contenir-workflow-laminas-mvc
 
-[![Continuous Integration](https://github.com/contenir/contenir-mvc-workflow/actions/workflows/continuous-integration.yml/badge.svg)](https://github.com/contenir/contenir-mvc-workflow/actions/workflows/continuous-integration.yml)
-[![codecov](https://codecov.io/gh/contenir/contenir-mvc-workflow/graph/badge.svg)](https://codecov.io/gh/contenir/contenir-mvc-workflow)
+Formerly `contenir/contenir-mvc-workflow`; the old package is abandoned in favour of this one.
+
+[![Continuous Integration](https://github.com/contenir/contenir-workflow-laminas-mvc/actions/workflows/continuous-integration.yml/badge.svg)](https://github.com/contenir/contenir-workflow-laminas-mvc/actions/workflows/continuous-integration.yml)
+[![codecov](https://codecov.io/gh/contenir/contenir-workflow-laminas-mvc/graph/badge.svg)](https://codecov.io/gh/contenir/contenir-workflow-laminas-mvc)
 
 Builds laminas-mvc routes and a laminas-navigation tree from the resource (page) tree of a
 [Contenir CMS](https://github.com/contenir) site.
@@ -32,7 +34,7 @@ The 1.x releases, which support PHP 8.1+, remain available from the `1.x` branch
 ## Installation
 
 ```bash
-composer require contenir/contenir-mvc-workflow
+composer require contenir/contenir-workflow-laminas-mvc
 ```
 
 With the laminas component installer, the `Contenir\Mvc\Workflow` module registers itself.
