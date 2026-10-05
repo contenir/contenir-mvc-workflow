@@ -1,5 +1,5 @@
 {
-    "name": "contenir/contenir-mvc-workflow",
+    "name": "contenir/contenir-workflow-laminas-mvc",
     "description": "Builds laminas-mvc routes and laminas-navigation pages from a tree of Contenir resources, one workflow per resource type",
     "license": "BSD-3-Clause",
     "type": "library",
@@ -14,7 +14,7 @@
     "support": {
         "docs": "https://docs.contenir.com.au/contenir-mvc-workflow/",
         "issues": "https://contenir.com.au/issues",
-        "source": "https://github.com/contenir/contenir-mvc-workflow"
+        "source": "https://github.com/contenir/contenir-workflow-laminas-mvc"
     },
     "require": {
         "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
@@ -32,6 +32,9 @@
         "laminas/laminas-http": "^2.19",
         "php-db/phpdb-qa-tools": "0.1.x-dev",
         "phpunit/phpunit": "^11.5.42"
+    },
+    "replace": {
+        "contenir/contenir-mvc-workflow": "self.version"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
@@ -56,7 +59,7 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-main": "2.0.x-dev"
+            "dev-main": "2.1.x-dev"
         },
         "laminas": {
             "component": "Contenir\\Mvc\\Workflow",
